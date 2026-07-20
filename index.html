@@ -24,7 +24,11 @@
 <!-- barra fixa no topo: rodada atual, última corrida e vencedor -->
 <div class="topbar">
   <div class="topbar-inner">
-    <span class="topbar-lead"><span class="live-dot" id="live-dot"></span><b>TEMPORADA 2026</b></span><span class="sep">·</span>
+    <span class="topbar-lead">
+      <span class="live-dot" id="live-dot"></span>
+      <b>TEMPORADA</b>
+      <select id="season-select" class="season-select" aria-label="Selecionar temporada"></select>
+    </span><span class="sep">·</span>
     <span id="tb-round">carregando…</span><span class="sep">·</span>
     <span id="tb-race"></span><span class="sep">·</span>
     <span id="tb-winner"></span>
@@ -35,7 +39,7 @@
 
   <!-- título da página + pódio com o Top 3 do campeonato -->
   <section class="hero" style="border-top:none;padding-top:56px;">
-    <p class="eyebrow">Fórmula 1 · Campeonato Mundial de Pilotos 2026</p>
+    <p class="eyebrow" id="eyebrow-season">Fórmula 1 · Campeonato Mundial de Pilotos 2026</p>
     <h1>Classificação atualizada,<br>corrida a corrida.</h1>
     <p class="sub" id="hero-sub">Carregando dados ao vivo da temporada 2026…</p>
 

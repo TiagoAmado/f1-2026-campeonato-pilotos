@@ -14,7 +14,7 @@
    ========================================================= */
 
 const API = "https://api.jolpi.ca/ergast/f1";
-const SEASON = 2026;
+let SEASON = 2026; // trocado pela caixa de seleção de temporada, lá embaixo
 
 /* cor e nome de exibição de cada equipe */
 const TEAM_META = {
@@ -141,7 +141,7 @@ async function loadData(){
   ]);
 
   const races = winnersData.MRData.RaceTable.Races;
-  if (races.length === 0) throw new Error("Nenhuma corrida concluída encontrada para 2026.");
+  if (races.length === 0) throw new Error(`Nenhuma corrida concluída encontrada para ${SEASON}.`);
 
   const totalRounds = fullCalendar.MRData.RaceTable.Races.length;
   const totalCompleted = races.length;
@@ -209,6 +209,10 @@ async function loadData(){
   const lastRace = races[races.length - 1];
   const winnerDriver = DRIVERS.find(d => d.id === WINNERS[WINNERS.length - 1].id);
 
+  document.title = `F1 ${SEASON} · Campeonato de Pilotos`;
+  document.getElementById("eyebrow-season").textContent =
+    `Fórmula 1 · Campeonato Mundial de Pilotos ${SEASON}`;
+
   document.getElementById("live-dot").classList.remove("err");
   document.getElementById("tb-round").textContent = `RODADA ${totalCompleted}/${totalRounds} CONCLUÍDA`;
   document.getElementById("tb-race").textContent = lastRace.raceName;
@@ -217,13 +221,13 @@ async function loadData(){
     : "";
 
   document.getElementById("hero-sub").textContent =
-    `Pontuação de todos os ${DRIVERS.length} pilotos após as ${totalCompleted} rodadas já disputadas em 2026 — dados ao vivo da Jolpica F1 API, com gráfico dinâmico para comparar quem você quiser.`;
+    `Pontuação de todos os ${DRIVERS.length} pilotos após as ${totalCompleted} rodadas já disputadas em ${SEASON} — dados ao vivo da Jolpica F1 API, com gráfico dinâmico para comparar quem você quiser.`;
 
   document.getElementById("standings-sub").textContent =
     `Após a rodada ${totalCompleted} de ${totalRounds} — ${lastRace.raceName}, ${fmtDateLong(lastRace.date)}.`;
 
   document.getElementById("calendar-sub").textContent =
-    `As ${totalCompleted} corridas já disputadas em 2026.`;
+    `As ${totalCompleted} corridas já disputadas em ${SEASON}.`;
 
   document.getElementById("footer-meta").textContent =
     `Dados oficiais da FIA via Jolpica F1 API · ${DRIVERS.length} pilotos · ${Object.keys(TEAMS).length} equipes · ${totalCompleted}/${totalRounds} corridas`;
@@ -570,7 +574,51 @@ document.getElementById("btn-none").addEventListener("click", ()=>{
 });
 
 /* =========================================================
-   INICIALIZAÇÃO — roda assim que a página abre
+   CAIXA DE SELEÇÃO DE TEMPORADA
+   ========================================================= */
+
+/* busca todas as temporadas que a API tem disponível e monta as
+   opções da caixa de seleção (a mais recente primeiro) */
+async function loadSeasonOptions(){
+  const select = document.getElementById("season-select");
+  try{
+    const data = await fetchJSON(`${API}/seasons.json?limit=100`);
+    const seasons = data.MRData.SeasonTable.Seasons.map(s => Number(s.season)).sort((a,b) => b-a);
+    select.innerHTML = seasons.map(y => `<option value="${y}">${y}</option>`).join("");
+  } catch (err){
+    // se a lista de temporadas falhar, ao menos deixa a atual escolhível
+    select.innerHTML = `<option value="${SEASON}">${SEASON}</option>`;
+  }
+  select.value = SEASON;
+}
+
+/* limpa tudo que foi montado pra temporada anterior antes de buscar
+   os dados da temporada nova escolhida na caixa de seleção */
+function resetForNewSeason(){
+  chartBuilt = false;
+  driverEls.clear();
+  gridTicks.length = 0;
+  SECOND_DRIVER.clear();
+  prevMaxY = null;
+  visible = new Set();
+
+  document.getElementById("podium").innerHTML = '<div class="state-msg">Carregando pódio…</div>';
+  document.getElementById("chip-groups").innerHTML = "";
+  document.getElementById("chart").innerHTML = "";
+  document.getElementById("standings-body").innerHTML = "";
+  document.getElementById("race-strip").innerHTML = "";
+  document.getElementById("cons-grid").innerHTML = "";
+}
+
+document.getElementById("season-select").addEventListener("change", (e)=>{
+  SEASON = Number(e.target.value);
+  resetForNewSeason();
+  init();
+});
+
+/* =========================================================
+   INICIALIZAÇÃO — roda assim que a página abre (e de novo toda
+   vez que a temporada é trocada na caixa de seleção)
    ========================================================= */
 async function init(){
   try{
@@ -589,4 +637,5 @@ async function init(){
     console.error(err);
   }
 }
+loadSeasonOptions();
 init();
