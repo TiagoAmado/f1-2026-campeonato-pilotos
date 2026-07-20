@@ -162,15 +162,20 @@
     .chart-svg-wrap{overflow-x:auto;}
     svg#chart{width:640px;max-width:none;}
   }
-  .gridline{stroke:var(--border);stroke-width:1;}
+  .gridline{stroke:var(--border);stroke-width:1;transition:y1 .5s cubic-bezier(.4,0,.2,1), y2 .5s cubic-bezier(.4,0,.2,1);}
   .gridline.zero{stroke:var(--text-3);}
-  .axis-label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--text-3);}
+  .axis-label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--text-3);transition:y .5s cubic-bezier(.4,0,.2,1);}
   .race-label{font-family:'JetBrains Mono',monospace;font-size:11.5px;fill:var(--text-2);text-anchor:middle;}
-  .driver-line{fill:none;stroke-width:2.4;transition:stroke-width .12s, opacity .12s;}
+  .driver-line{
+    fill:none;stroke-width:2.4;
+    transition:stroke-width .12s, opacity .35s ease, d .5s cubic-bezier(.4,0,.2,1);
+  }
   .driver-line.dim{opacity:.08;}
   .driver-line.hot{stroke-width:4;}
-  .pt-dot{transition:opacity .12s, r .12s;}
+  .driver-line.hidden{opacity:0;pointer-events:none;}
+  .pt-dot{transition:opacity .35s ease, r .12s, cx .5s cubic-bezier(.4,0,.2,1), cy .5s cubic-bezier(.4,0,.2,1);}
   .pt-dot.dim{opacity:.08;}
+  .pt-dot.hidden{opacity:0;pointer-events:none;}
 
   .tooltip{
     position:absolute;pointer-events:none;background:#0D0F13;border:1px solid var(--border);
@@ -651,70 +656,82 @@ const plotH = VB_H - PAD.top - PAD.bottom;
 function xFor(i){ return PAD.left + (i * (plotW / (RACES.length-1 || 1))); }
 function yFor(v){ return PAD.top + (1 - v/MAX_Y) * plotH; }
 
-function renderChart(){
+/* elementos do SVG sao criados uma unica vez e reaproveitados nas
+   atualizacoes seguintes (troca de selecao / rescala do eixo Y), so
+   os atributos mudam — assim a transicao CSS anima suavemente em vez
+   de tudo piscar e recomecar do zero a cada clique. */
+let chartBuilt = false;
+const gridLines = [];
+const gridLabels = [];
+const driverEls = new Map();
+const GRID_TICKS = 5;
+
+function buildChartSkeleton(){
   const svg = document.getElementById("chart");
   svg.innerHTML = "";
   svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
 
-  const shown = DRIVERS.filter(d => visible.has(d.id));
-  const maxPts = shown.reduce((m,d) => Math.max(m, d.pts[d.pts.length-1]), 0);
-  ({ max: MAX_Y, step: GRID_STEP } = niceAxis(maxPts));
+  const gridGroup = document.createElementNS(svgNS,"g");
+  const xAxisGroup = document.createElementNS(svgNS,"g");
+  const linesGroup = document.createElementNS(svgNS,"g");
+  const dotsGroup = document.createElementNS(svgNS,"g");
+  svg.append(gridGroup, xAxisGroup, linesGroup, dotsGroup);
 
-  // grid + eixo Y
-  for (let v=0; v<=MAX_Y; v+=GRID_STEP){
-    const y = yFor(v);
+  gridLines.length = 0;
+  gridLabels.length = 0;
+  for (let i=0; i<=GRID_TICKS; i++){
     const line = document.createElementNS(svgNS,"line");
     line.setAttribute("x1", PAD.left); line.setAttribute("x2", VB_W-PAD.right);
-    line.setAttribute("y1", y); line.setAttribute("y2", y);
-    line.setAttribute("class", "gridline" + (v===0 ? " zero" : ""));
-    svg.appendChild(line);
+    line.setAttribute("class", "gridline" + (i===0 ? " zero" : ""));
+    gridGroup.appendChild(line);
+    gridLines.push(line);
 
     const label = document.createElementNS(svgNS,"text");
-    label.setAttribute("x", PAD.left - 10); label.setAttribute("y", y+4);
+    label.setAttribute("x", PAD.left - 10);
     label.setAttribute("text-anchor","end"); label.setAttribute("class","axis-label");
-    label.textContent = v;
-    svg.appendChild(label);
+    gridGroup.appendChild(label);
+    gridLabels.push(label);
   }
 
-  // eixo X
+  // eixo X (fixo pra temporada toda, nao muda com a selecao)
   RACES.forEach((r,i)=>{
     const x = xFor(i);
     const label = document.createElementNS(svgNS,"text");
     label.setAttribute("x", x); label.setAttribute("y", VB_H - PAD.bottom + 26);
     label.setAttribute("class","race-label");
     label.textContent = r;
-    svg.appendChild(label);
+    xAxisGroup.appendChild(label);
   });
 
   const tooltip = document.getElementById("tooltip");
 
-  shown.forEach(d=>{
+  driverEls.clear();
+  DRIVERS.forEach(d=>{
     const team = TEAMS[d.team];
     const isSecond = SECOND_DRIVER.has(d.id);
 
-    const points = d.pts.map((v,i)=>[xFor(i), yFor(v)]);
     const path = document.createElementNS(svgNS,"path");
-    const dAttr = points.map((p,i)=> (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
-    path.setAttribute("d", dAttr);
-    path.setAttribute("class","driver-line");
+    path.setAttribute("class","driver-line hidden");
     path.setAttribute("stroke", team.color);
     if (isSecond) path.setAttribute("stroke-dasharray","6 4");
     path.dataset.id = d.id;
-    svg.appendChild(path);
+    linesGroup.appendChild(path);
 
-    points.forEach((p,i)=>{
+    const dots = d.pts.map((v,i)=>{
       const c = document.createElementNS(svgNS,"circle");
-      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", 3.4);
+      c.setAttribute("r", 3.4);
       c.setAttribute("fill", team.color);
-      c.setAttribute("class","pt-dot");
+      c.setAttribute("class","pt-dot hidden");
       c.dataset.id = d.id;
 
-      c.addEventListener("mouseenter", (e)=>{
+      c.addEventListener("mouseenter", ()=>{
         highlight(d.id, true);
         const rect = svg.getBoundingClientRect();
         const scaleX = rect.width / VB_W, scaleY = rect.height / VB_H;
-        tooltip.style.left = (p[0]*scaleX) + "px";
-        tooltip.style.top = (p[1]*scaleY) + "px";
+        const cx = parseFloat(c.getAttribute("cx"));
+        const cy = parseFloat(c.getAttribute("cy"));
+        tooltip.style.left = (cx*scaleX) + "px";
+        tooltip.style.top = (cy*scaleY) + "px";
         tooltip.querySelector(".sw").style.background = team.color;
         tooltip.querySelector(".tt-name").innerHTML = d.flag + " " + d.name;
         tooltip.querySelector(".tt-race").textContent = RACE_FULL[i];
@@ -725,7 +742,42 @@ function renderChart(){
         highlight(d.id, false);
         tooltip.style.opacity = 0;
       });
-      svg.appendChild(c);
+      dotsGroup.appendChild(c);
+      return c;
+    });
+
+    driverEls.set(d.id, { path, dots });
+  });
+
+  chartBuilt = true;
+}
+
+function renderChart(){
+  if (!chartBuilt) buildChartSkeleton();
+
+  const shown = DRIVERS.filter(d => visible.has(d.id));
+  const maxPts = shown.reduce((m,d) => Math.max(m, d.pts[d.pts.length-1]), 0);
+  MAX_Y = niceAxis(maxPts).max;
+  GRID_STEP = MAX_Y / GRID_TICKS;
+
+  for (let i=0; i<=GRID_TICKS; i++){
+    const v = GRID_STEP * i;
+    const y = yFor(v);
+    gridLines[i].setAttribute("y1", y); gridLines[i].setAttribute("y2", y);
+    gridLabels[i].setAttribute("y", y+4);
+    gridLabels[i].textContent = Math.round(v);
+  }
+
+  DRIVERS.forEach(d=>{
+    const els = driverEls.get(d.id);
+    const isVisible = visible.has(d.id);
+    const points = d.pts.map((v,i)=>[xFor(i), yFor(v)]);
+    const dAttr = points.map((p,i)=> (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    els.path.setAttribute("d", dAttr);
+    els.path.classList.toggle("hidden", !isVisible);
+    points.forEach((p,i)=>{
+      els.dots[i].setAttribute("cx", p[0]); els.dots[i].setAttribute("cy", p[1]);
+      els.dots[i].classList.toggle("hidden", !isVisible);
     });
   });
 }
@@ -735,7 +787,7 @@ function highlight(id, on){
     l.classList.toggle("hot", on && visible.has(id));
   });
   if (!visible.has(id)) return;
-  document.querySelectorAll(".driver-line").forEach(l=>{
+  document.querySelectorAll(".driver-line:not(.hidden)").forEach(l=>{
     if (l.dataset.id !== id) l.classList.toggle("dim", on);
   });
 }
