@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>F1 2026 · Campeonato de Pilotos</title>
+<meta name="description" content="Classificação ao vivo do Campeonato Mundial de Pilotos de F1 2026 — pontos, gráfico de evolução por corrida, vencedores de cada etapa e construtores.">
+<meta property="og:title" content="F1 2026 · Campeonato de Pilotos">
+<meta property="og:description" content="Classificação ao vivo da temporada 2026, atualizada a cada corrida.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0A0C10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0C10'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23B14EFF' text-anchor='middle'%3EF1%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -65,6 +71,11 @@
   }
   .topbar b{color:var(--text);font-weight:700;}
   .topbar .sep{color:var(--text-3);}
+  .topbar-lead{display:flex;align-items:center;gap:10px;}
+  @media (max-width:720px){
+    .topbar-inner{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 24px;}
+    .topbar .sep{display:none;}
+  }
 
   /* ---- hero ---- */
   .hero{padding:56px 0 20px;}
@@ -145,6 +156,10 @@
 
   .chart-svg-wrap{position:relative;}
   svg#chart{width:100%;height:auto;display:block;overflow:visible;}
+  @media (max-width:720px){
+    .chart-svg-wrap{overflow-x:auto;}
+    svg#chart{width:640px;max-width:none;}
+  }
   .gridline{stroke:var(--border);stroke-width:1;}
   .gridline.zero{stroke:var(--text-3);}
   .axis-label{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--text-3);}
@@ -217,8 +232,10 @@
   .state-msg{
     color:var(--text-2);font-family:'JetBrains Mono',monospace;font-size:13px;
     padding:40px 0;text-align:center;
+    animation:msgPulse 1.4s ease-in-out infinite;
   }
-  .state-msg.error{color:var(--red);}
+  .state-msg.error{color:var(--red);animation:none;}
+  @keyframes msgPulse{ 0%,100%{opacity:.55;} 50%{opacity:1;} }
 
   footer{padding:34px 0 60px;color:var(--text-3);font-size:12px;}
   footer .wrap{border-top:1px solid var(--border);padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
@@ -229,8 +246,7 @@
 
 <div class="topbar">
   <div class="topbar-inner">
-    <span class="live-dot" id="live-dot"></span>
-    <b>TEMPORADA 2026</b><span class="sep">·</span>
+    <span class="topbar-lead"><span class="live-dot" id="live-dot"></span><b>TEMPORADA 2026</b></span><span class="sep">·</span>
     <span id="tb-round">carregando…</span><span class="sep">·</span>
     <span id="tb-race"></span><span class="sep">·</span>
     <span id="tb-winner"></span>
