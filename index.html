@@ -12,6 +12,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0C10'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23B14EFF' text-anchor='middle'%3EF1%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7/css/flag-icons.min.css">
 <style>
   :root{
     --bg:#0A0C10;
@@ -40,6 +41,7 @@
     line-height:1.5;
   }
   .mono{font-family:'JetBrains Mono',monospace;}
+  .fi{vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.1);}
   h1,h2,h3,.display{font-family:'Titillium Web',sans-serif;}
   a{color:inherit;}
   .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
@@ -366,13 +368,13 @@ const TEAM_META = {
   cadillac:     { name:"Cadillac",     color:"#8A8F98" },
 };
 
-const NATIONALITY_FLAG = {
-  Italian:"🇮🇹", British:"🇬🇧", Monegasque:"🇲🇨", Australian:"🇦🇺", Dutch:"🇳🇱",
-  French:"🇫🇷", German:"🇩🇪", Spanish:"🇪🇸", Brazilian:"🇧🇷", Thai:"🇹🇭",
-  Finnish:"🇫🇮", Mexican:"🇲🇽", Canadian:"🇨🇦", "New Zealander":"🇳🇿", Argentine:"🇦🇷",
-  American:"🇺🇸", Japanese:"🇯🇵", Danish:"🇩🇰", Chinese:"🇨🇳", Indian:"🇮🇳",
-  Polish:"🇵🇱", Swedish:"🇸🇪", Belgian:"🇧🇪", Austrian:"🇦🇹", Swiss:"🇨🇭",
-  Russian:"🇷🇺", Indonesian:"🇮🇩", Colombian:"🇨🇴", Portuguese:"🇵🇹", Irish:"🇮🇪",
+const NATIONALITY_CODE = {
+  Italian:"it", British:"gb", Monegasque:"mc", Australian:"au", Dutch:"nl",
+  French:"fr", German:"de", Spanish:"es", Brazilian:"br", Thai:"th",
+  Finnish:"fi", Mexican:"mx", Canadian:"ca", "New Zealander":"nz", Argentine:"ar",
+  American:"us", Japanese:"jp", Danish:"dk", Chinese:"cn", Indian:"in",
+  Polish:"pl", Swedish:"se", Belgian:"be", Austrian:"at", Swiss:"ch",
+  Russian:"ru", Indonesian:"id", Colombian:"co", Portuguese:"pt", Irish:"ie",
 };
 
 const CIRCUIT_CODE = {
@@ -394,7 +396,10 @@ function fmtDateLong(iso){
   const months = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
   return `${d} de ${months[m-1]} de ${y}`;
 }
-function flagFor(nat){ return NATIONALITY_FLAG[nat] || "🏁"; }
+function flagFor(nat){
+  const code = NATIONALITY_CODE[nat] || "xx";
+  return `<span class="fi fi-${code}" title="${nat}"></span>`;
+}
 function codeFor(circuitId, locality){
   return CIRCUIT_CODE[circuitId] || (locality || "???").slice(0,3).toUpperCase();
 }
@@ -444,6 +449,18 @@ let MAX_Y = 200;
 let GRID_STEP = 25;
 let leaderPts = 0;
 let visible = new Set();
+const SECOND_DRIVER = new Set();
+
+/* arredonda o teto do eixo Y pro próximo número "redondo" (1/2/2.5/5/10 * 10^n) */
+function niceAxis(maxValue, ticks = 5){
+  const raw = Math.max(maxValue, 10);
+  const roughStep = raw / ticks;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  const norm = roughStep / magnitude;
+  const niceNorm = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10;
+  const step = niceNorm * magnitude;
+  return { max: Math.ceil(raw / step) * step, step };
+}
 
 /* =========================================================
    CARREGAMENTO DOS DADOS (Jolpica F1 API)
@@ -512,8 +529,12 @@ async function loadData(){
   });
 
   leaderPts = DRIVERS[0].pts[DRIVERS[0].pts.length - 1];
-  MAX_Y = Math.ceil((leaderPts + 20) / 50) * 50;
-  GRID_STEP = MAX_Y <= 250 ? 25 : (MAX_Y <= 500 ? 50 : 100);
+
+  const seenTeams = new Set();
+  DRIVERS.forEach(d => {
+    if (seenTeams.has(d.team)) SECOND_DRIVER.add(d.id);
+    seenTeams.add(d.team);
+  });
 
   visible = new Set(DRIVERS.slice(0, 5).map(d => d.id));
 
@@ -523,7 +544,7 @@ async function loadData(){
   document.getElementById("live-dot").classList.remove("err");
   document.getElementById("tb-round").textContent = `RODADA ${totalCompleted}/${totalRounds} CONCLUÍDA`;
   document.getElementById("tb-race").textContent = lastRace.raceName;
-  document.getElementById("tb-winner").textContent = winnerDriver
+  document.getElementById("tb-winner").innerHTML = winnerDriver
     ? `Vencedor: ${winnerDriver.flag} ${winnerDriver.name}`
     : "";
 
@@ -635,6 +656,10 @@ function renderChart(){
   svg.innerHTML = "";
   svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
 
+  const shown = DRIVERS.filter(d => visible.has(d.id));
+  const maxPts = shown.reduce((m,d) => Math.max(m, d.pts[d.pts.length-1]), 0);
+  ({ max: MAX_Y, step: GRID_STEP } = niceAxis(maxPts));
+
   // grid + eixo Y
   for (let v=0; v<=MAX_Y; v+=GRID_STEP){
     const y = yFor(v);
@@ -663,22 +688,15 @@ function renderChart(){
 
   const tooltip = document.getElementById("tooltip");
 
-  // desenha por equipe pra dar dash diferente ao 2º piloto
-  const teamCount = {};
-
-  DRIVERS.forEach(d=>{
+  shown.forEach(d=>{
     const team = TEAMS[d.team];
-    teamCount[d.team] = (teamCount[d.team] || 0);
-    const isSecond = teamCount[d.team] === 1;
-    teamCount[d.team]++;
-
-    const isVisible = visible.has(d.id);
+    const isSecond = SECOND_DRIVER.has(d.id);
 
     const points = d.pts.map((v,i)=>[xFor(i), yFor(v)]);
     const path = document.createElementNS(svgNS,"path");
     const dAttr = points.map((p,i)=> (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
     path.setAttribute("d", dAttr);
-    path.setAttribute("class","driver-line" + (isVisible ? "" : " dim"));
+    path.setAttribute("class","driver-line");
     path.setAttribute("stroke", team.color);
     if (isSecond) path.setAttribute("stroke-dasharray","6 4");
     path.dataset.id = d.id;
@@ -688,7 +706,7 @@ function renderChart(){
       const c = document.createElementNS(svgNS,"circle");
       c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", 3.4);
       c.setAttribute("fill", team.color);
-      c.setAttribute("class","pt-dot" + (isVisible ? "" : " dim"));
+      c.setAttribute("class","pt-dot");
       c.dataset.id = d.id;
 
       c.addEventListener("mouseenter", (e)=>{
@@ -698,7 +716,7 @@ function renderChart(){
         tooltip.style.left = (p[0]*scaleX) + "px";
         tooltip.style.top = (p[1]*scaleY) + "px";
         tooltip.querySelector(".sw").style.background = team.color;
-        tooltip.querySelector(".tt-name").textContent = d.flag + " " + d.name;
+        tooltip.querySelector(".tt-name").innerHTML = d.flag + " " + d.name;
         tooltip.querySelector(".tt-race").textContent = RACE_FULL[i];
         tooltip.querySelector(".tt-pts").textContent = d.pts[i] + " pts acumulados";
         tooltip.style.opacity = 1;
