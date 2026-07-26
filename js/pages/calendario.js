@@ -71,6 +71,12 @@ async function load(){
             ${isNext ? `<div class="cal-countdown">${countdownText(dayDiff(r.date))}</div>` : ""}
           </div>
           ${r.Sprint ? '<span class="cal-badge">Sprint</span>' : ""}
+          ${isPast ? `
+            <div class="cal-links">
+              <a href="corrida.html?season=${SEASON}&round=${r.round}">Corrida →</a>
+              <a href="treino.html?season=${SEASON}&round=${r.round}">Treino →</a>
+              ${r.Sprint ? `<a href="sprint.html?season=${SEASON}&round=${r.round}">Sprint →</a>` : ""}
+            </div>` : ""}
         </div>`;
     }).join("");
   } catch (err){

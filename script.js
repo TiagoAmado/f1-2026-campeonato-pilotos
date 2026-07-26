@@ -65,6 +65,7 @@ async function loadData(){
   WINNERS = races.map(r => ({
     id: r.Results[0].Driver.driverId,
     team: r.Results[0].Constructor.constructorId,
+    round: Number(r.round),
   }));
 
   const standingsByRound = await loadPool(races.map(r => r.round), async (round) => {
@@ -294,12 +295,12 @@ function renderRaceStrip(){
     const d = DRIVERS.find(x=>x.id===w.id);
     const team = TEAMS[w.team];
     return `
-      <div class="race-card" style="--c:${team.color}">
+      <a class="race-card" href="corrida.html?season=${SEASON}&round=${w.round}" style="--c:${team.color}">
         <div class="rnum">RODADA ${i+1}</div>
         <div class="rname">${RACE_FULL[i]}</div>
         <div class="rwinner">${d ? d.flag + " " + d.name : w.id}</div>
         <div class="rteam">${team.name}</div>
-      </div>`;
+      </a>`;
   }).join("");
 }
 
