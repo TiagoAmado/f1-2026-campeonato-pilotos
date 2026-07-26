@@ -1,76 +1,98 @@
 /* =========================================================
-   ESTILOS — F1 2026 · Campeonato de Pilotos
+   ESTILOS — F1 · Campeonato de Pilotos
    Cores, fontes e o "esqueleto visual" de cada bloco da página.
    O conteúdo em si (textos, números, gráfico) é gerado pelo
    script.js — este arquivo só cuida da aparência.
+
+   Paleta "vintage racing": inspirada em pôsteres de GP e liveries
+   dos anos 60-70 (verde-inglês, azul+laranja, ouro de troféu, prata
+   de cromado) — não reproduz a identidade visual de nenhuma equipe
+   específica.
    ========================================================= */
 
 :root{
-  --bg:#0A0C10;
-  --panel:#14171C;
-  --panel-2:#191D24;
-  --border:#262B33;
-  --text:#EDEFF2;
-  --text-2:#8A93A0;
-  --text-3:#565F6B;
-  --accent:#B14EFF;
-  --accent-soft:rgba(177,78,255,.14);
-  --green:#39FF88;
-  --red:#FF5C5C;
+  --bg-void:#0A0C0A;
+  --bg-panel:#13160F;
+  --bg-panel-2:#181C13;
+  --border:#2A2E22;
+  --paper:#EFE6D2;
+  --text:#EDEAE0;
+  --text-2:#9B9686;
+  --text-3:#5C5A4C;
+
+  --racing-green:#0B3D2E;
+  --heritage-blue:#1C4E80;
+  --burnt-amber:#E2762A;
+  --amber-soft:rgba(226,118,42,.18);
+  --brass-gold:#C9A227;
+  --chrome:#B8BCC2;
+  --oxide-red:#8C2F2F;
+  --oxide-red-bright:color-mix(in srgb, var(--oxide-red) 55%, white);
+  --live-green:color-mix(in srgb, var(--racing-green) 45%, white);
+
   --radius:10px;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
   background:
-    radial-gradient(1200px 600px at 15% -10%, rgba(177,78,255,.10), transparent 60%),
-    radial-gradient(900px 500px at 100% 0%, rgba(57,255,136,.06), transparent 55%),
-    var(--bg);
+    radial-gradient(1200px 600px at 15% -10%, rgba(11,61,46,.16), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(28,78,128,.08), transparent 55%),
+    var(--bg-void);
   color:var(--text);
   font-family:'Inter',sans-serif;
   -webkit-font-smoothing:antialiased;
   line-height:1.5;
 }
-.mono{font-family:'JetBrains Mono',monospace;}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
 .fi{vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.1);}
-h1,h2,h3,.display{font-family:'Titillium Web',sans-serif;}
+h1,h2,h3,.display{font-family:'Racing Sans One',sans-serif;}
 a{color:inherit;}
 .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
 
 /* ---- barra do topo (rodada atual, corrida, vencedor) ---- */
 .topbar{
   border-bottom:1px solid var(--border);
-  background:rgba(20,23,28,.6);
+  background:rgba(19,22,15,.7);
   backdrop-filter:blur(6px);
   position:sticky;top:0;z-index:20;
 }
+/* grão sutil de litografia atrás da barra do topo — só um risco visual,
+   não espalhado pela página inteira */
+.topbar::before{
+  content:'';
+  position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.06;mix-blend-mode:overlay;pointer-events:none;z-index:0;
+}
 .topbar-inner{
+  position:relative;z-index:1;
   max-width:1180px;margin:0 auto;padding:10px 24px;
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   font-family:'JetBrains Mono',monospace;font-size:12.5px;letter-spacing:.03em;
   color:var(--text-2);
 }
 .live-dot{
-  width:7px;height:7px;border-radius:50%;background:var(--green);
-  box-shadow:0 0 0 0 rgba(57,255,136,.6);
+  width:7px;height:7px;border-radius:50%;background:var(--live-green);
+  box-shadow:0 0 0 0 color-mix(in srgb, var(--live-green) 55%, transparent);
   animation:pulse 1.8s infinite;
   flex:none;
 }
-.live-dot.err{background:var(--red);animation:none;}
+.live-dot.err{background:var(--oxide-red);animation:none;}
 @keyframes pulse{
-  0%{box-shadow:0 0 0 0 rgba(57,255,136,.55);}
-  70%{box-shadow:0 0 0 8px rgba(57,255,136,0);}
-  100%{box-shadow:0 0 0 0 rgba(57,255,136,0);}
+  0%{box-shadow:0 0 0 0 color-mix(in srgb, var(--live-green) 55%, transparent);}
+  70%{box-shadow:0 0 0 8px color-mix(in srgb, var(--live-green) 0%, transparent);}
+  100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--live-green) 0%, transparent);}
 }
 .topbar b{color:var(--text);font-weight:700;}
 .topbar .sep{color:var(--text-3);}
 .topbar-lead{display:flex;align-items:center;gap:8px;}
 .season-select{
-  background:var(--panel-2);color:var(--text);border:1px solid var(--border);
+  background:var(--bg-panel-2);color:var(--text);border:1px solid var(--border);
   border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:700;
   padding:3px 8px;cursor:pointer;
 }
-.season-select:hover{border-color:var(--accent);}
+.season-select:hover{border-color:var(--burnt-amber);}
 @media (max-width:720px){
   .topbar-inner{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 24px;}
   .topbar .sep{display:none;}
@@ -79,44 +101,52 @@ a{color:inherit;}
 /* ---- topo da página (título + pódio top 3) ---- */
 .hero{padding:56px 0 20px;}
 .eyebrow{
-  font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.16em;
-  color:var(--accent);text-transform:uppercase;margin:0 0 14px;font-weight:700;
+  font-family:'Staatliches',sans-serif;font-size:14px;letter-spacing:.16em;
+  color:var(--burnt-amber);text-transform:uppercase;margin:0 0 14px;font-weight:400;
 }
 .hero h1{
-  font-size:clamp(32px,5vw,54px);font-weight:900;margin:0 0 10px;letter-spacing:-.01em;
-  line-height:1.03;
+  font-size:clamp(32px,5vw,54px);font-weight:400;margin:0 0 10px;letter-spacing:-.01em;
+  line-height:1.05;
 }
 .hero p.sub{color:var(--text-2);font-size:15.5px;margin:0 0 34px;max-width:640px;}
 
 .podium{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:8px;}
 .p-card{
-  background:linear-gradient(180deg,var(--panel-2),var(--panel));
+  background:linear-gradient(180deg,var(--bg-panel-2),var(--bg-panel));
   border:1px solid var(--border);border-radius:var(--radius);
   padding:18px 18px 16px;position:relative;overflow:hidden;
 }
 .p-card::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--team-color,var(--accent));
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--team-color,var(--burnt-amber));
 }
 .p-card .rank{
   font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-3);font-weight:700;
   display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
 }
 .p-card .rank .badge{
-  background:var(--team-color,var(--accent));color:#0A0C10;font-weight:800;
-  padding:2px 8px;border-radius:20px;font-size:11px;
+  background:var(--team-color,var(--burnt-amber));color:#0A0C0A;font-weight:700;
+  font-family:'Staatliches',sans-serif;letter-spacing:.02em;
+  padding:2px 9px;border-radius:20px;font-size:12px;
 }
-.p-card .name{font-size:19px;font-weight:700;margin:0 0 2px;font-family:'Titillium Web',sans-serif;}
+.p-card .name{font-size:19px;font-weight:700;margin:0 0 2px;}
 .p-card .team{color:var(--text-2);font-size:12.5px;margin:0 0 14px;}
-.p-card .pts{font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;letter-spacing:-.02em;}
+.p-card .pts{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:700;letter-spacing:-.02em;}
 .p-card .pts span{font-size:13px;color:var(--text-2);font-weight:500;margin-left:4px;}
 .p-card .gap{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-2);margin-top:2px;}
 
 @media (max-width:720px){ .podium{grid-template-columns:1fr;} }
 
 /* ---- blocos genéricos de seção (título + descrição) ---- */
-section{padding:46px 0;border-top:1px solid var(--border);}
+section{padding:46px 0;position:relative;}
+/* divisor fino "quadriculado" entre seções, no lugar de uma linha simples
+   — a home (.hero) não recebe, ela já é o topo da página */
+section:not(.hero)::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:5px;
+  background-image:repeating-linear-gradient(90deg, var(--paper) 0 8px, transparent 8px 16px);
+  opacity:.35;
+}
 .sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:22px;flex-wrap:wrap;}
-.sec-head h2{font-size:23px;font-weight:700;margin:0 0 4px;}
+.sec-head h2{font-size:22px;font-weight:400;margin:0 0 4px;text-transform:uppercase;letter-spacing:.02em;}
 .sec-head p{color:var(--text-2);font-size:13.5px;margin:0;max-width:520px;}
 
 /* ---- botões "Top 5 / Top 10 / Todos / Limpar" ---- */
@@ -126,29 +156,29 @@ section{padding:46px 0;border-top:1px solid var(--border);}
   font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.03em;
   padding:7px 12px;border-radius:20px;cursor:pointer;transition:.15s;
 }
-.toolbar button:hover{border-color:var(--accent);color:var(--text);}
+.toolbar button:hover{border-color:var(--burnt-amber);color:var(--text);}
 
 /* ---- painel do gráfico e os "chips" de cada piloto ---- */
 .chart-panel{
-  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
   padding:20px 20px 8px;
 }
 .chip-groups{display:flex;flex-wrap:wrap;gap:16px 22px;margin-bottom:20px;}
 .chip-group{display:flex;flex-direction:column;gap:6px;}
 .chip-group .team-label{
-  font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+  font-family:'Staatliches',sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
   color:var(--text-3);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;
 }
 .chip-group .team-label .sw{width:8px;height:8px;border-radius:2px;flex:none;}
 .chip-row{display:flex;gap:6px;}
 .chip{
   display:flex;align-items:center;gap:6px;
-  border:1px solid var(--border);background:var(--panel-2);
+  border:1px solid var(--border);background:var(--bg-panel-2);
   color:var(--text-2);padding:5px 10px 5px 7px;border-radius:20px;cursor:pointer;
   font-size:12px;transition:.12s;white-space:nowrap;
 }
 .chip .dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--c);opacity:.35;transition:.12s;}
-.chip.on{color:var(--text);border-color:var(--c);background:color-mix(in srgb, var(--c) 14%, var(--panel-2));}
+.chip.on{color:var(--text);border-color:var(--c);background:color-mix(in srgb, var(--c) 14%, var(--bg-panel-2));}
 .chip.on .dot{opacity:1;box-shadow:0 0 8px var(--c);}
 .chip:hover{border-color:var(--c);}
 .chip .pts{font-family:'JetBrains Mono',monospace;color:var(--text-3);font-size:11px;}
@@ -182,7 +212,7 @@ svg#chart{width:100%;height:auto;display:block;overflow:visible;}
 .pt-dot.hidden{opacity:0;pointer-events:none;}
 
 .tooltip{
-  position:absolute;pointer-events:none;background:#0D0F13;border:1px solid var(--border);
+  position:absolute;pointer-events:none;background:#0D0F0B;border:1px solid var(--border);
   border-radius:8px;padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;
   color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transform:translate(-50%,-115%);
   transition:opacity .1s;white-space:nowrap;z-index:30;
@@ -190,42 +220,54 @@ svg#chart{width:100%;height:auto;display:block;overflow:visible;}
 .tooltip .tt-driver{font-weight:700;margin-bottom:3px;display:flex;align-items:center;gap:6px;}
 .tooltip .tt-driver .sw{width:8px;height:8px;border-radius:50%;}
 .tooltip .tt-race{color:var(--text-2);}
-.tooltip .tt-pts{color:var(--accent);font-weight:700;}
+.tooltip .tt-pts{color:var(--burnt-amber);font-weight:700;}
 
-/* ---- tabela de classificação ---- */
+/* ---- tabela de classificação: "prancheta de cronometragem" ---- */
 table{width:100%;border-collapse:collapse;font-size:13.5px;}
 thead th{
   text-align:left;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--text-3);font-weight:600;padding:0 14px 10px;border-bottom:1px solid var(--border);
+  text-transform:uppercase;font-weight:700;padding:10px 14px;
+  background:var(--paper);color:var(--bg-void);border-bottom:2px solid var(--bg-void);
 }
 tbody td{padding:11px 14px;border-bottom:1px solid var(--border);}
 tbody tr:last-child td{border-bottom:none;}
-tbody tr:hover{background:var(--panel-2);}
-td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
+tbody tr:hover{background:var(--bg-panel-2);}
+td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
 .drow{display:flex;align-items:center;gap:10px;}
+/* roundel: numero de posicao como selo circular, no lugar do numero solto */
 .num-badge{
-  width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#0A0C10;flex:none;
+  width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#0A0C0A;flex:none;
   background:var(--c);
+  box-shadow:0 0 0 2px var(--bg-panel), 0 0 0 3px var(--c);
 }
 .dname{font-weight:600;}
 .dteam{color:var(--text-2);font-size:12px;}
 .wins-badge{
-  background:var(--accent-soft);color:var(--accent);font-family:'JetBrains Mono',monospace;
+  background:var(--amber-soft);color:var(--burnt-amber);font-family:'JetBrains Mono',monospace;
   font-size:11px;padding:2px 7px;border-radius:20px;font-weight:700;
 }
-.table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);}
+.table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg-panel);}
 .table-scroll table{min-width:640px;}
 .table-scroll thead th:first-child, .table-scroll tbody td:first-child{padding-left:18px;}
 .table-scroll thead th:last-child, .table-scroll tbody td:last-child{padding-right:18px;}
+/* par de faixas de equipe (cor + linha fina de "papel"), ecoando a
+   faixa lateral do card do pódio e o par de listras das liveries de época */
+.table-scroll tbody td:first-child{position:relative;}
+.table-scroll tbody td:first-child::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c, var(--racing-green));
+}
+.table-scroll tbody td:first-child::after{
+  content:'';position:absolute;left:5px;top:0;bottom:0;width:1px;background:var(--paper);opacity:.25;
+}
 
 /* ---- cartões de vencedores de cada corrida ---- */
 .race-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;}
 .race-card{
-  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;
   border-left:3px solid var(--c);
 }
-.race-card .rnum{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-3);letter-spacing:.06em;}
+.race-card .rnum{font-family:'Staatliches',sans-serif;font-size:12px;color:var(--text-3);letter-spacing:.06em;}
 .race-card .rname{font-size:12.5px;color:var(--text-2);margin:2px 0 8px;}
 .race-card .rwinner{font-size:14px;font-weight:700;}
 .race-card .rteam{font-size:11.5px;color:var(--text-2);}
@@ -237,7 +279,7 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
 .cons-row .pos{font-family:'JetBrains Mono',monospace;color:var(--text-3);font-size:12px;width:18px;}
 .cons-row .sw{width:10px;height:10px;border-radius:3px;background:var(--c);flex:none;}
 .cons-row .cname{flex:1;font-size:13.5px;font-weight:600;}
-.cons-row .cpts{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text-2);}
+.cons-row .cpts{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:13px;color:var(--text-2);}
 .cons-row .bar{height:4px;border-radius:2px;background:var(--border);flex:1;max-width:120px;overflow:hidden;display:none;}
 
 /* ---- mensagens de "carregando..." / erro ---- */
@@ -246,7 +288,7 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
   padding:40px 0;text-align:center;
   animation:msgPulse 1.4s ease-in-out infinite;
 }
-.state-msg.error{color:var(--red);animation:none;}
+.state-msg.error{color:var(--oxide-red-bright);animation:none;}
 @keyframes msgPulse{ 0%,100%{opacity:.55;} 50%{opacity:1;} }
 
 footer{padding:34px 0 60px;color:var(--text-3);font-size:12px;}
