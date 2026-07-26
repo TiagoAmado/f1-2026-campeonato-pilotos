@@ -267,7 +267,7 @@ function renderStandings(){
     const last = d.pts[d.pts.length-1];
     const gap = i===0 ? "—" : "-" + (leaderPts - last);
     return `
-      <tr>
+      <tr style="--c:${team.color}">
         <td class="mono">${i+1}</td>
         <td>
           <div class="drow">

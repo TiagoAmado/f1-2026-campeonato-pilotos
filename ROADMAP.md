@@ -92,9 +92,15 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 - Textura sutil de grão/halftone (5-8% opacidade) atrás do header e dos divisores de seção; divisor fino "quadriculado" entre seções, substituindo o `border-top` simples atual — usar com moderação, só nesses dois lugares.
 - Aplicar a paleta nova em todos os componentes existentes: pódio, chips do gráfico, tira de vencedores, linhas de construtores — a maioria é automática (já usa `--c`/`--team-color`), só os acentos fixos precisam de atenção manual.
 
-**Arquivos**: `style.css` (tokens + componentes), `index.html` (link de fontes).
+**Arquivos**: `style.css` (tokens + componentes), `index.html` (link de fontes, favicon, theme-color), `script.js` (injeta `--c` no `<tr>` da tabela, pra alimentar o par de faixas).
 
 **Dependência**: nenhuma técnica, mas fica mais fácil de revisar depois da Fase 0 (menos chance de conflito de merge).
+
+**Status**: ✅ concluída — ver PR da Fase 1. Ajustes feitos durante a implementação:
+- `--racing-green` (bem escuro) não tinha contraste suficiente pra uso direto em texto (eyebrow, badges, tooltip); esses papéis foram pro `--burnt-amber` (que o próprio brief já descrevia como "Destaque/CTA, líder do campeonato, hover"), deixando `--racing-green`/`--heritage-blue` como tons estruturais (glow de fundo, faixa padrão da tabela).
+- O indicador "ao vivo" (bolinha verde pulsante) e a mensagem de erro usam variantes clareadas via `color-mix()` (`--live-green`, `--oxide-red-bright`) pra manter contraste de texto/visibilidade sem reintroduzir um verde/vermelho neon.
+- Nome do piloto no card do pódio (`.p-card .name`) ficou em Inter (corpo), não em Racing Sans One — nomes próprios variam muito de tamanho e a fonte condensada de título prejudicava a legibilidade.
+- Testado manualmente (temporada corrente, uma temporada antiga com grid de 21 pilotos, troca de temporada, fontes carregando via `document.fonts`, sem overflow horizontal novo introduzido em mobile).
 
 ---
 
