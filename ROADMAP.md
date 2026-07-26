@@ -126,7 +126,7 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 **Status**: em andamento — dividida em 3 PRs menores em vez de uma só, pelo tamanho:
 - [x] **2a** — `js/layout.js` (cabeçalho compartilhado das páginas secundárias, adiado da Fase 0), link "Calendário completo" no topbar da home, `fetchSeasons()` centralizado em `js/api.js` (reaproveitado pela home e pelo calendário), e `calendario.html` completo (corridas passadas/futuras, contagem regressiva pra próxima etapa, badge de sprint). O link "Ver resultado" de cada corrida pra `corrida.html` fica pra 2b, quando essa página existir.
-- [ ] **2b** — `corrida.html`, `treino.html`, `sprint.html` (resultado por corrida/treino/sprint), mais o link de volta do calendário e da tira de vencedores da home
+- [x] **2b** — `corrida.html`, `treino.html`, `sprint.html` (resultado por corrida/treino/sprint). `js/resultsTable.js` compartilha a tabela entre corrida e sprint (mesmo formato de dado). Tira de vencedores da home e cada linha passada do calendário agora linkam pras páginas novas. Reaproveitou `.table-scroll` (rolagem lateral) existente pro mobile, em vez de criar um segundo layout em cards — mantém consistência com o resto do site.
 - [ ] **2c** — `piloto.html`, `equipe.html` (perfis, reaproveitando `js/chart.js`)
 
 ---

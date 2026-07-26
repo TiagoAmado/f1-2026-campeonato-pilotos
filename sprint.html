@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultado da sprint · F1 Campeonato de Pilotos</title>
+<meta name="description" content="Resultado da corrida sprint de uma etapa de Fórmula 1.">
+<meta name="theme-color" content="#0A0C0A">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0C0A'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23E2762A' text-anchor='middle'%3EF1%3C/text%3E%3C/svg%3E">
+
+<!-- fontes do Google Fonts e a biblioteca de bandeiras (flag-icons) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Racing+Sans+One&family=Staatliches&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7/css/flag-icons.min.css">
+
+<!-- toda a aparência do site (cores, layout, fontes) mora aqui -->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- barra do topo: link de volta ao calendário, montada por js/layout.js -->
+<div class="topbar" id="topbar"></div>
+
+<div class="wrap">
+
+  <section class="hero" style="padding-top:56px;">
+    <p class="eyebrow">Resultado da sprint</p>
+    <h1 id="race-title">Carregando…</h1>
+    <p class="sub" id="hero-sub"></p>
+  </section>
+
+  <section id="result-section">
+    <div id="result-content"><div class="state-msg">Carregando resultado…</div></div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <span>Dados oficiais da FIA via Jolpica F1 API</span>
+  </div>
+</footer>
+
+<script type="module" src="js/pages/sprint.js"></script>
+</body>
+</html>
