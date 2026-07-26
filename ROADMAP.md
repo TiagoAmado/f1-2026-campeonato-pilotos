@@ -124,6 +124,11 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 **Dependência**: Fase 0 completa (módulos compartilhados e nav). Fase 1 opcional mas recomendável antes, senão as páginas novas nascem no visual antigo e precisam ser re-visitadas depois.
 
+**Status**: em andamento — dividida em 3 PRs menores em vez de uma só, pelo tamanho:
+- [x] **2a** — `js/layout.js` (cabeçalho compartilhado das páginas secundárias, adiado da Fase 0), link "Calendário completo" no topbar da home, `fetchSeasons()` centralizado em `js/api.js` (reaproveitado pela home e pelo calendário), e `calendario.html` completo (corridas passadas/futuras, contagem regressiva pra próxima etapa, badge de sprint). O link "Ver resultado" de cada corrida pra `corrida.html` fica pra 2b, quando essa página existir.
+- [ ] **2b** — `corrida.html`, `treino.html`, `sprint.html` (resultado por corrida/treino/sprint), mais o link de volta do calendário e da tira de vencedores da home
+- [ ] **2c** — `piloto.html`, `equipe.html` (perfis, reaproveitando `js/chart.js`)
+
 ---
 
 ## 6. Fase 3 — P1 (prioridade média)

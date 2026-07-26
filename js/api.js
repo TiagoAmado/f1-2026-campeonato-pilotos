@@ -68,3 +68,14 @@ export async function fetchCached(url, ttlMs){
   if (ttlMs > 0) cacheSet(url, data);
   return data;
 }
+
+/* lista de temporadas disponíveis na API, mais recente primeiro;
+   [] se a chamada falhar (quem usa decide o fallback) */
+export async function fetchSeasons(){
+  try{
+    const data = await fetchCached(`${API}/seasons.json?limit=100`, TTL_HISTORIC);
+    return data.MRData.SeasonTable.Seasons.map(s => Number(s.season)).sort((a,b) => b-a);
+  } catch {
+    return [];
+  }
+}
