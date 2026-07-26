@@ -15,7 +15,7 @@
    aberta. Lógica compartilhada com futuras páginas mora em js/.
    ========================================================= */
 
-import { API, fetchCached, loadPool, TTL_LIVE, TTL_HISTORIC } from "./js/api.js";
+import { API, fetchCached, loadPool, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "./js/api.js";
 import { teamMeta, flagFor, codeFor } from "./js/teams.js";
 import { fmtDate, fmtDateLong } from "./js/format.js";
 import { createLineChart } from "./js/chart.js";
@@ -348,12 +348,11 @@ document.getElementById("btn-none").addEventListener("click", ()=>{
    opções da caixa de seleção (a mais recente primeiro) */
 async function loadSeasonOptions(){
   const select = document.getElementById("season-select");
-  try{
-    const data = await fetchCached(`${API}/seasons.json?limit=100`, TTL_HISTORIC);
-    const seasons = data.MRData.SeasonTable.Seasons.map(s => Number(s.season)).sort((a,b) => b-a);
+  const seasons = await fetchSeasons();
+  if (seasons.length){
     LATEST_SEASON = seasons[0];
     select.innerHTML = seasons.map(y => `<option value="${y}">${y}</option>`).join("");
-  } catch (err){
+  } else {
     // se a lista de temporadas falhar, ao menos deixa a atual escolhível
     select.innerHTML = `<option value="${SEASON}">${SEASON}</option>`;
   }
