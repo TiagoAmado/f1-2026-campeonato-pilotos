@@ -24,12 +24,15 @@ export function setPageTitle(text){
   if (el) el.textContent = text;
 }
 
-/* lê season/round/id da querystring da página atual */
+/* lê season/round/id/a/b da querystring da página atual (a/b: usados
+   pelo comparador de pilotos, pra identificar os dois lados) */
 export function pageParams(){
   const p = new URLSearchParams(location.search);
   return {
     season: p.get("season") ? Number(p.get("season")) : null,
     round: p.get("round") ? Number(p.get("round")) : null,
     id: p.get("id"),
+    a: p.get("a"),
+    b: p.get("b"),
   };
 }

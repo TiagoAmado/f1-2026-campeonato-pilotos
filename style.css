@@ -337,6 +337,14 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-varia
 .fastest-lap-callout .fl-name{font-weight:600;flex:1;}
 .fastest-lap-callout .fl-time{color:var(--text);}
 
+/* ---- calculadora "o que falta pro título" (home) ---- */
+.title-math{
+  padding:10px 14px;margin-bottom:16px;background:var(--amber-soft);
+  border:1px solid var(--burnt-amber);border-radius:var(--radius);
+  font-size:13px;color:var(--text);
+}
+.title-math:empty{display:none;}
+
 /* ---- perfil de piloto / equipe: pastilhas de estatística ---- */
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0;}
 .stat-card{
@@ -352,6 +360,31 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-varia
   font-size:11px;color:var(--text-2);margin-top:4px;
 }
 @media (max-width:640px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+
+/* ---- comparador cabeça a cabeça (comparador.html) ---- */
+.h2h-picker{display:flex;align-items:center;gap:12px;margin-top:10px;}
+.h2h-picker .season-select{font-size:13.5px;padding:6px 10px;}
+.vs-label{font-family:'Racing Sans One',sans-serif;color:var(--text-3);font-size:14px;}
+.h2h-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:start;}
+.h2h-side{
+  background:var(--bg-panel);border:1px solid var(--border);border-top:3px solid var(--c);
+  border-radius:var(--radius);padding:20px;
+}
+.h2h-side h2{font-size:19px;margin:0 0 2px;}
+.h2h-side .team{color:var(--text-2);font-size:13px;margin:0 0 16px;}
+.h2h-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.h2h-stats .stat-value{font-size:22px;}
+.h2h-vs{display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:36px;text-align:center;}
+.h2h-score{font-family:'Racing Sans One',sans-serif;font-size:30px;color:var(--text);}
+.h2h-label{
+  font-family:'Staatliches',sans-serif;text-transform:uppercase;letter-spacing:.05em;
+  font-size:10.5px;color:var(--text-2);margin-top:4px;line-height:1.4;
+}
+@media (max-width:720px){
+  .h2h-grid{grid-template-columns:1fr;}
+  .h2h-vs{padding-top:6px;}
+  .h2h-picker{flex-wrap:wrap;}
+}
 
 /* ---- mensagens de "carregando..." / erro ---- */
 .state-msg{

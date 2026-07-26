@@ -39,6 +39,56 @@ let visible = new Set();
 const SECOND_DRIVER = new Set();
 let chart = null;
 
+/* calcula em quantas rodadas restantes o título fica matematicamente
+   decidido, comparando o líder com o 2º colocado (simplificação comum
+   pra esse tipo de cálculo: não considera outros rivais mais distantes,
+   que teoricamente já estariam fora mesmo antes do líder x vice). */
+function computeTitleMath(fullCalendar, totalCompleted, leader, second){
+  const remaining = fullCalendar.MRData.RaceTable.Races.slice(totalCompleted);
+  const gap = leader.pts[leader.pts.length - 1] - second.pts[second.pts.length - 1];
+
+  if (remaining.length === 0){
+    return { seasonOver: true, gap };
+  }
+
+  const POINTS_RACE_MAX = 26; // 25 (vitória) + 1 (volta mais rápida)
+  const POINTS_SPRINT_MAX = 8; // vitória na sprint
+  const maxRemainingTotal = remaining.reduce(
+    (sum, r) => sum + POINTS_RACE_MAX + (r.Sprint ? POINTS_SPRINT_MAX : 0), 0
+  );
+
+  if (gap > maxRemainingTotal){
+    return { seasonOver: false, decidedNow: true, gap };
+  }
+
+  let cumulative = 0;
+  for (let i = 0; i < remaining.length; i++){
+    cumulative += POINTS_RACE_MAX + (remaining[i].Sprint ? POINTS_SPRINT_MAX : 0);
+    if (gap > maxRemainingTotal - cumulative){
+      return { seasonOver: false, decidedNow: false, roundsToDecide: i + 1, gap };
+    }
+  }
+  return { seasonOver: false, decidedNow: false, roundsToDecide: null, gap, maxRemainingTotal };
+}
+
+function renderTitleMath(math, leader){
+  const el = document.getElementById("title-math");
+  if (!el) return;
+  let text;
+  if (math.seasonOver){
+    text = math.gap > 0
+      ? `🏆 Temporada encerrada — ${leader.name} é o campeão.`
+      : `Temporada encerrada.`;
+  } else if (math.decidedNow){
+    text = `🏆 Título matematicamente decidido: ${leader.name} não pode mais ser alcançado.`;
+  } else if (math.roundsToDecide){
+    text = `Faltam ${math.roundsToDecide} corrida${math.roundsToDecide === 1 ? "" : "s"} pra ${leader.name} confirmar o título matematicamente, se a diferença atual se mantiver.`;
+  } else {
+    text = `Título ainda em aberto até a última corrida — ${math.maxRemainingTotal} pontos em disputa.`;
+  }
+  el.textContent = text;
+}
+
 /* =========================================================
    CARREGAMENTO DOS DADOS (Jolpica F1 API)
    ========================================================= */
@@ -112,6 +162,10 @@ async function loadData(){
   });
 
   leaderPts = DRIVERS[0].pts[DRIVERS[0].pts.length - 1];
+
+  if (DRIVERS.length > 1){
+    renderTitleMath(computeTitleMath(fullCalendar, totalCompleted, DRIVERS[0], DRIVERS[1]), DRIVERS[0]);
+  }
 
   const seenTeams = new Set();
   DRIVERS.forEach(d => {
@@ -373,6 +427,7 @@ function resetForNewSeason(){
   document.getElementById("standings-body").innerHTML = "";
   document.getElementById("race-strip").innerHTML = "";
   document.getElementById("cons-grid").innerHTML = "";
+  document.getElementById("title-math").textContent = "";
 }
 
 document.getElementById("season-select").addEventListener("change", (e)=>{

@@ -137,15 +137,17 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 ## 6. Fase 3 — P1 (prioridade média)
 
-- Ranking de paradas nos boxes (mais rápidas da corrida/temporada) — endpoint `/{season}/{round}/pitstops.json`.
-- Comparador cabeça a cabeça entre dois pilotos (classificação, corrida, pontos, confrontos diretos).
-- Ranking de voltas mais rápidas da temporada.
-- Calculadora "o que falta pro título" — cálculo local a partir da diferença de pontos e corridas restantes, sem endpoint novo.
-- Estatística de confiabilidade (abandonos por equipe/motor), usando o campo de status já presente em `/results`.
-- Alternância de idioma PT/EN.
-- Cartão de compartilhamento estilo "pôster vintage" do pódio/classificação atual, pra redes sociais.
+- [x] Calculadora "o que falta pro título" — cálculo local a partir da diferença de pontos e corridas restantes (considera as corridas restantes que têm sprint, usando o campo `Sprint` do calendário já buscado). Callout na home, acima da tabela de classificação. Simplificação: só compara líder x 2º colocado, não todos os rivais matematicamente ainda vivos.
+- [x] Comparador cabeça a cabeça entre dois pilotos (`comparador.html?a=&b=&season=`) — pontos, vitórias, pódios, poles e confrontos diretos (quem terminou na frente em cada rodada em comum). `js/driverStats.js` extraído de `piloto.js` pra buscar os dados de cada lado sem duplicar lógica.
+- [ ] Ranking de paradas nos boxes (mais rápidas da corrida/temporada) — endpoint `/{season}/{round}/pitstops.json`.
+- [ ] Ranking de voltas mais rápidas da temporada.
+- [ ] Estatística de confiabilidade (abandonos por equipe/motor), usando o campo de status já presente em `/results`.
+- [ ] Alternância de idioma PT/EN — escopo bem maior que os outros itens (toca toda string do site, todas as páginas); tratar como esforço dedicado à parte, não bundlar com os itens menores.
+- [ ] Cartão de compartilhamento estilo "pôster vintage" do pódio/classificação atual, pra redes sociais.
 
 **Dependência**: Fases 0-2 (reaproveita páginas e dados já buscados).
+
+**Status**: em andamento, dividida em PRs menores como as fases anteriores — feito até aqui: calculadora de título + comparador (3a).
 
 ---
 
