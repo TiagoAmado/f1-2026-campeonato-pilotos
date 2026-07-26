@@ -3,11 +3,12 @@
    vitórias, pódios, poles e evolução de pontos corrida a corrida.
    ========================================================= */
 
-import { API, fetchCached, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "../api.js";
-import { teamMeta, flagFor, codeFor } from "../teams.js";
+import { fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "../api.js";
+import { flagFor, codeFor } from "../teams.js";
 import { fmtDate } from "../format.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
 import { createLineChart } from "../chart.js";
+import { fetchDriverSeasonStats } from "../driverStats.js";
 
 const DRIVER_ID = pageParams().id;
 let SEASON = pageParams().season;
@@ -44,56 +45,27 @@ async function load(){
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
 
-    const [resultsData, qualiData, sprintData] = await Promise.all([
-      fetchCached(`${API}/${SEASON}/drivers/${DRIVER_ID}/results.json?limit=40`, ttl),
-      fetchCached(`${API}/${SEASON}/drivers/${DRIVER_ID}/qualifying.json?limit=40`, ttl),
-      fetchCached(`${API}/${SEASON}/drivers/${DRIVER_ID}/sprint.json?limit=40`, ttl),
-    ]);
-
-    const races = resultsData.MRData.RaceTable.Races;
-    if (!races.length){
+    const stats = await fetchDriverSeasonStats(DRIVER_ID, SEASON, ttl);
+    if (!stats){
       setPageTitle("Perfil de piloto");
       content.innerHTML = `<div class="state-msg">Sem dados pra este piloto na temporada ${SEASON}.</div>`;
       return;
     }
-
-    const driver = races[0].Results[0].Driver;
+    const { driver, team, races, ptsEvolution, totalPts, wins, podiums, poles, byRound } = stats;
     const lastResult = races[races.length - 1].Results[0];
-    const team = teamMeta(lastResult.Constructor.constructorId, lastResult.Constructor.name);
-
-    // pontos de corrida + pontos de sprint (a Jolpica devolve os dois
-    // separados; a pontuação total do piloto soma ambos)
-    const sprintPtsByRound = new Map(
-      sprintData.MRData.RaceTable.Races.map(r => [Number(r.round), Number(r.SprintResults[0].points)])
-    );
-
-    let cum = 0;
-    const ptsEvolution = races.map(r => {
-      cum += Number(r.Results[0].points) + (sprintPtsByRound.get(Number(r.round)) || 0);
-      return cum;
-    });
-    const wins = races.filter(r => r.Results[0].positionText === "1").length;
-    const podiums = races.filter(r => {
-      const pos = Number(r.Results[0].position);
-      return !isNaN(pos) && pos <= 3;
-    }).length;
-
-    const qualiRaces = qualiData.MRData.RaceTable.Races;
-    const poles = qualiRaces.filter(r => r.QualifyingResults[0].position === "1").length;
 
     document.title = `${driver.givenName} ${driver.familyName} · Perfil`;
     setPageTitle(`${driver.givenName} ${driver.familyName}`);
 
     const rows = races.map(r => {
-      const res = r.Results[0];
-      const roundPts = Number(res.points) + (sprintPtsByRound.get(Number(r.round)) || 0);
+      const round = byRound.get(Number(r.round));
       return `
         <tr>
           <td class="mono">${r.round}</td>
           <td>${r.raceName}</td>
-          <td class="num mono">${res.grid}</td>
-          <td class="mono">${res.positionText}</td>
-          <td class="num mono">${roundPts}</td>
+          <td class="num mono">${round.grid}</td>
+          <td class="mono">${round.positionText}</td>
+          <td class="num mono">${round.points}</td>
         </tr>`;
     }).join("");
 
@@ -101,7 +73,7 @@ async function load(){
       <h1>${flagFor(driver.nationality)} ${driver.givenName} ${driver.familyName}</h1>
       <p class="sub"><a href="equipe.html?id=${lastResult.Constructor.constructorId}&season=${SEASON}">${team.name}</a> · #${lastResult.number} · ${driver.nationality} · temporada ${SEASON}</p>
       <div class="stat-grid">
-        <div class="stat-card"><span class="stat-value">${cum}</span><span class="stat-label">Pontos</span></div>
+        <div class="stat-card"><span class="stat-value">${totalPts}</span><span class="stat-label">Pontos</span></div>
         <div class="stat-card"><span class="stat-value">${wins}</span><span class="stat-label">Vitórias</span></div>
         <div class="stat-card"><span class="stat-value">${podiums}</span><span class="stat-label">Pódios</span></div>
         <div class="stat-card"><span class="stat-value">${poles}</span><span class="stat-label">Poles</span></div>
