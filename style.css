@@ -117,6 +117,8 @@ a{color:inherit;}
   line-height:1.05;
 }
 .hero p.sub{color:var(--text-2);font-size:15.5px;margin:0 0 34px;max-width:640px;}
+.hero p.sub a{text-decoration:none;font-weight:600;}
+.hero p.sub a:hover{color:var(--burnt-amber);}
 
 .podium{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:8px;}
 .p-card{
@@ -138,6 +140,8 @@ a{color:inherit;}
 }
 .p-card .name{font-size:19px;font-weight:700;margin:0 0 2px;}
 .p-card .team{color:var(--text-2);font-size:12.5px;margin:0 0 14px;}
+.p-card .name a, .p-card .team a, .dname a, .cons-row .cname a{text-decoration:none;}
+.p-card .name a:hover, .p-card .team a:hover, .dname a:hover, .cons-row .cname a:hover{color:var(--burnt-amber);}
 .p-card .pts{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:30px;font-weight:700;letter-spacing:-.02em;}
 .p-card .pts span{font-size:13px;color:var(--text-2);font-weight:500;margin-left:4px;}
 .p-card .gap{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-2);margin-top:2px;}
@@ -332,6 +336,22 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-varia
 }
 .fastest-lap-callout .fl-name{font-weight:600;flex:1;}
 .fastest-lap-callout .fl-time{color:var(--text);}
+
+/* ---- perfil de piloto / equipe: pastilhas de estatística ---- */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0;}
+.stat-card{
+  background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;text-align:center;
+}
+.stat-value{
+  display:block;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:26px;font-weight:700;color:var(--burnt-amber);
+}
+.stat-label{
+  display:block;font-family:'Staatliches',sans-serif;letter-spacing:.06em;text-transform:uppercase;
+  font-size:11px;color:var(--text-2);margin-top:4px;
+}
+@media (max-width:640px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
 
 /* ---- mensagens de "carregando..." / erro ---- */
 .state-msg{

@@ -164,8 +164,8 @@ function renderPodium(){
     return `
       <div class="p-card" style="--team-color:${team.color}">
         <div class="rank"><span>P${i+1}</span><span class="badge">${d.wins} vitória${d.wins===1?"":"s"}</span></div>
-        <p class="name">${d.flag} ${d.name}</p>
-        <p class="team">${team.name} · #${d.num}</p>
+        <p class="name"><a href="piloto.html?id=${d.id}&season=${SEASON}">${d.flag} ${d.name}</a></p>
+        <p class="team"><a href="equipe.html?id=${d.team}&season=${SEASON}">${team.name}</a> · #${d.num}</p>
         <p class="pts">${last}<span>pts</span></p>
         <p class="gap">${gap}</p>
       </div>`;
@@ -274,11 +274,11 @@ function renderStandings(){
           <div class="drow">
             <span class="num-badge" style="--c:${team.color}">${d.num}</span>
             <div>
-              <div class="dname">${d.flag} ${d.name}</div>
+              <div class="dname"><a href="piloto.html?id=${d.id}&season=${SEASON}">${d.flag} ${d.name}</a></div>
             </div>
           </div>
         </td>
-        <td class="dteam">${team.name}</td>
+        <td class="dteam"><a href="equipe.html?id=${d.team}&season=${SEASON}">${team.name}</a></td>
         <td class="num mono">${last}</td>
         <td class="num">${d.wins ? `<span class="wins-badge">${d.wins}</span>` : `<span class="dteam">0</span>`}</td>
         <td class="num mono dteam">${gap}</td>
@@ -315,7 +315,7 @@ function renderConstructors(){
       <div class="cons-row" style="--c:${team.color}">
         <span class="pos mono">${i+1}</span>
         <span class="sw"></span>
-        <span class="cname">${team.name}</span>
+        <span class="cname"><a href="equipe.html?id=${c.team}&season=${SEASON}">${team.name}</a></span>
         <span class="cpts mono">${c.pts} pts</span>
       </div>`;
   }).join("");

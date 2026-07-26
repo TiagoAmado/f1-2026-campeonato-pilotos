@@ -127,7 +127,11 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 **Status**: em andamento — dividida em 3 PRs menores em vez de uma só, pelo tamanho:
 - [x] **2a** — `js/layout.js` (cabeçalho compartilhado das páginas secundárias, adiado da Fase 0), link "Calendário completo" no topbar da home, `fetchSeasons()` centralizado em `js/api.js` (reaproveitado pela home e pelo calendário), e `calendario.html` completo (corridas passadas/futuras, contagem regressiva pra próxima etapa, badge de sprint). O link "Ver resultado" de cada corrida pra `corrida.html` fica pra 2b, quando essa página existir.
 - [x] **2b** — `corrida.html`, `treino.html`, `sprint.html` (resultado por corrida/treino/sprint). `js/resultsTable.js` compartilha a tabela entre corrida e sprint (mesmo formato de dado). Tira de vencedores da home e cada linha passada do calendário agora linkam pras páginas novas. Reaproveitou `.table-scroll` (rolagem lateral) existente pro mobile, em vez de criar um segundo layout em cards — mantém consistência com o resto do site.
-- [ ] **2c** — `piloto.html`, `equipe.html` (perfis, reaproveitando `js/chart.js`)
+- [x] **2c** — `piloto.html`, `equipe.html` (perfis, reaproveitando `js/chart.js`). Pontos, vitórias, pódios/posição e evolução por rodada, mais poles (piloto) e a contribuição de cada piloto (equipe). Nomes de piloto/equipe na home (pódio, tabela, construtores) agora linkam pros perfis. Novo componente `.stat-grid`/`.stat-card` reaproveitado pelas duas páginas.
+
+**Fase 2 completa** — as 6 páginas P0 do brief estão no ar.
+
+> **Nota pra Fase 3**: a Jolpica separa pontos de corrida (`/results`) de pontos de sprint (`/sprint`) em endpoints diferentes — somar só `/results` subestima a pontuação de quem correu sprint (descoberto e corrigido em `piloto.html`/`equipe.html`, que agora somam os dois). Qualquer cálculo futuro que re-derive pontuação a partir de resultados brutos (ex.: a calculadora de título do item 10, ou a estatística de confiabilidade do item 11) precisa considerar isso, ou preferir os endpoints de standings (que já vêm com o total oficial).
 
 ---
 
