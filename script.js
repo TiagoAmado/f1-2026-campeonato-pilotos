@@ -1,106 +1,27 @@
 /* =========================================================
-   F1 2026 · Campeonato de Pilotos — script.js
+   F1 · Campeonato de Pilotos — script.js (home)
 
    Como este arquivo funciona, resumido:
    1. loadData()       busca os dados AO VIVO na API da Jolpica F1
-                        (pontuação, corridas, vencedores, equipes).
+                        (pontuação, corridas, vencedores, equipes),
+                        com cache em localStorage (js/api.js).
    2. as funções renderX() pegam esses dados e escrevem o HTML/SVG
       de cada parte da página (pódio, gráfico, tabela, etc).
    3. init() (lá no final do arquivo) chama loadData() e depois
       todas as renderX(), na ordem certa, quando a página abre.
 
    Nenhum resultado de corrida fica fixo aqui no código — tudo é
-   buscado de novo, ao vivo, toda vez que a página é aberta.
+   buscado de novo (ou vem do cache local), toda vez que a página é
+   aberta. Lógica compartilhada com futuras páginas mora em js/.
    ========================================================= */
 
-const API = "https://api.jolpi.ca/ergast/f1";
+import { API, fetchCached, loadPool, TTL_LIVE, TTL_HISTORIC } from "./js/api.js";
+import { teamMeta, flagFor, codeFor } from "./js/teams.js";
+import { fmtDate, fmtDateLong } from "./js/format.js";
+import { createLineChart } from "./js/chart.js";
+
 let SEASON = 2026; // trocado pela caixa de seleção de temporada, lá embaixo
-
-/* cor e nome de exibição de cada equipe */
-const TEAM_META = {
-  mercedes:     { name:"Mercedes",     color:"#00D7B6" },
-  ferrari:      { name:"Ferrari",      color:"#FF2D4D" },
-  mclaren:      { name:"McLaren",      color:"#FF8000" },
-  red_bull:     { name:"Red Bull",     color:"#4C86E0" },
-  alpine:       { name:"Alpine",       color:"#FF87BC" },
-  aston_martin: { name:"Aston Martin", color:"#2ECC91" },
-  williams:     { name:"Williams",     color:"#64C4FF" },
-  rb:           { name:"Racing Bulls", color:"#8C7CFF" },
-  haas:         { name:"Haas",         color:"#D9A6AE" },
-  audi:         { name:"Audi",         color:"#B58A57" },
-  cadillac:     { name:"Cadillac",     color:"#8A8F98" },
-};
-
-/* nacionalidade (como a API descreve) -> código de país (usado pra
-   mostrar a bandeira, via a biblioteca "flag-icons" carregada no HTML) */
-const NATIONALITY_CODE = {
-  Italian:"it", British:"gb", Monegasque:"mc", Australian:"au", Dutch:"nl",
-  French:"fr", German:"de", Spanish:"es", Brazilian:"br", Thai:"th",
-  Finnish:"fi", Mexican:"mx", Canadian:"ca", "New Zealander":"nz", Argentine:"ar",
-  American:"us", Japanese:"jp", Danish:"dk", Chinese:"cn", Indian:"in",
-  Polish:"pl", Swedish:"se", Belgian:"be", Austrian:"at", Swiss:"ch",
-  Russian:"ru", Indonesian:"id", Colombian:"co", Portuguese:"pt", Irish:"ie",
-};
-
-/* id do circuito (como a API identifica) -> sigla curta pro eixo X do gráfico */
-const CIRCUIT_CODE = {
-  albert_park:"AUS", shanghai:"CHN", suzuka:"JPN", bahrain:"BHR", jeddah:"SAU",
-  miami:"MIA", imola:"EMI", monaco:"MON", catalunya:"ESP", villeneuve:"CAN",
-  red_bull_ring:"AUT", silverstone:"GBR", spa:"BEL", hungaroring:"HUN",
-  zandvoort:"NED", monza:"ITA", baku:"AZE", marina_bay:"SIN", americas:"USA",
-  rodriguez:"MEX", interlagos:"BRA", las_vegas:"LVG", losail:"QAT", yas_marina:"ABU",
-};
-
-const MONTHS_PT = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-
-function fmtDate(iso){
-  const [y,m,d] = iso.split("-").map(Number);
-  return `${d} ${MONTHS_PT[m-1]}`;
-}
-function fmtDateLong(iso){
-  const [y,m,d] = iso.split("-").map(Number);
-  const months = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-  return `${d} de ${months[m-1]} de ${y}`;
-}
-function flagFor(nat){
-  const code = NATIONALITY_CODE[nat] || "xx";
-  return `<span class="fi fi-${code}" title="${nat}"></span>`;
-}
-function codeFor(circuitId, locality){
-  return CIRCUIT_CODE[circuitId] || (locality || "???").slice(0,3).toUpperCase();
-}
-function teamMeta(id, fallbackName){
-  if (TEAM_META[id]) return TEAM_META[id];
-  let hash = 0;
-  for (const ch of id) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  return { name: fallbackName, color: `hsl(${hash % 360} 70% 55%)` };
-}
-
-async function fetchJSON(url, attempt = 0){
-  const res = await fetch(url);
-  if (res.status === 429 && attempt < 4){
-    const retryAfter = Number(res.headers.get("retry-after"));
-    const delay = retryAfter ? retryAfter * 1000 : 600 * (attempt + 1);
-    await new Promise(r => setTimeout(r, delay));
-    return fetchJSON(url, attempt + 1);
-  }
-  if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
-  return res.json();
-}
-
-/* limita concorrência das chamadas por rodada pra não estourar rate limit da API */
-async function loadPool(items, worker, concurrency = 2){
-  const results = new Array(items.length);
-  let i = 0;
-  async function run(){
-    while (i < items.length){
-      const idx = i++;
-      results[idx] = await worker(items[idx], idx);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, run));
-  return results;
-}
+let LATEST_SEASON = null; // temporada mais recente disponível na API (define o TTL do cache)
 
 /* =========================================================
    ESTADO
@@ -113,31 +34,24 @@ let RACE_FULL = [];
 let DRIVERS = [];
 let WINNERS = [];
 let CONSTRUCTORS = [];
-let MAX_Y = 200;
-let GRID_STEP = 25;
 let leaderPts = 0;
 let visible = new Set();
 const SECOND_DRIVER = new Set();
-
-/* arredonda o teto do eixo Y pro próximo número "redondo" (1/2/2.5/5/10 * 10^n) */
-function niceAxis(maxValue, ticks = 5){
-  const raw = Math.max(maxValue, 10);
-  const roughStep = raw / ticks;
-  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-  const norm = roughStep / magnitude;
-  const niceNorm = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10;
-  const step = niceNorm * magnitude;
-  return { max: Math.ceil(raw / step) * step, step };
-}
+let chart = null;
 
 /* =========================================================
    CARREGAMENTO DOS DADOS (Jolpica F1 API)
    ========================================================= */
 async function loadData(){
+  // temporada em andamento cacheia por pouco tempo (dados mudam a cada
+  // corrida); temporada encerrada cacheia por muito tempo (não muda mais)
+  const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
+  const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
+
   const [winnersData, constructorsData, fullCalendar] = await Promise.all([
-    fetchJSON(`${API}/${SEASON}/results/1.json?limit=40`),
-    fetchJSON(`${API}/${SEASON}/constructorStandings.json`),
-    fetchJSON(`${API}/${SEASON}.json?limit=40`),
+    fetchCached(`${API}/${SEASON}/results/1.json?limit=40`, ttl),
+    fetchCached(`${API}/${SEASON}/constructorStandings.json`, ttl),
+    fetchCached(`${API}/${SEASON}.json?limit=40`, ttl),
   ]);
 
   const races = winnersData.MRData.RaceTable.Races;
@@ -154,7 +68,7 @@ async function loadData(){
   }));
 
   const standingsByRound = await loadPool(races.map(r => r.round), async (round) => {
-    const data = await fetchJSON(`${API}/${SEASON}/${round}/driverStandings.json`);
+    const data = await fetchCached(`${API}/${SEASON}/${round}/driverStandings.json`, ttl);
     return data.MRData.StandingsTable.StandingsLists[0].DriverStandings;
   });
 
@@ -291,7 +205,7 @@ function renderChips(){
       const id = chip.dataset.id;
       if (visible.has(id)) visible.delete(id); else visible.add(id);
       syncChipStates();
-      renderChart();
+      updateChart();
     });
   });
   el.querySelectorAll(".team-label").forEach(label=>{
@@ -301,7 +215,7 @@ function renderChips(){
       const allOn = teamDrivers.every(id=>visible.has(id));
       teamDrivers.forEach(id=> allOn ? visible.delete(id) : visible.add(id));
       syncChipStates();
-      renderChart();
+      updateChart();
     });
   });
 }
@@ -314,180 +228,33 @@ function syncChipStates(){
 }
 
 /* =========================================================
-   RENDER: GRÁFICO SVG (evolução de pontos por corrida)
+   GRÁFICO (evolução de pontos por corrida) — motor em js/chart.js
    ========================================================= */
-const svgNS = "http://www.w3.org/2000/svg";
-const PAD = { left:48, right:20, top:20, bottom:44 };
-const VB_W = 1160, VB_H = 540;
-const plotW = VB_W - PAD.left - PAD.right;
-const plotH = VB_H - PAD.top - PAD.bottom;
 
-function xFor(i){ return PAD.left + (i * (plotW / (RACES.length-1 || 1))); }
-function yFor(v){ return PAD.top + (1 - v/MAX_Y) * plotH; }
-
-/* elementos do SVG são criados uma única vez e reaproveitados nas
-   atualizações seguintes (troca de seleção / rescala do eixo Y), só
-   os atributos mudam — assim a transição CSS anima suavemente em vez
-   de tudo piscar e recomeçar do zero a cada clique. */
-let chartBuilt = false;
-const gridTicks = [];
-const driverEls = new Map();
-const GRID_TICKS = 5;
-
-function buildChartSkeleton(){
-  const svg = document.getElementById("chart");
-  svg.innerHTML = "";
-  svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
-
-  const gridGroup = document.createElementNS(svgNS,"g");
-  const xAxisGroup = document.createElementNS(svgNS,"g");
-  const linesGroup = document.createElementNS(svgNS,"g");
-  const dotsGroup = document.createElementNS(svgNS,"g");
-  svg.append(gridGroup, xAxisGroup, linesGroup, dotsGroup);
-
-  // cada tick da grade é um grupo com a linha+label na origem local;
-  // o grupo inteiro é movido via transform (translateY), que é uma
-  // propriedade CSS de verdade e por isso anima suave — diferente de
-  // x1/y1/x2/y2 de <line>, que não são propriedades CSS animáveis.
-  gridTicks.length = 0;
-  for (let i=0; i<=GRID_TICKS; i++){
-    const g = document.createElementNS(svgNS,"g");
-    g.setAttribute("class", "grid-tick");
-
-    const line = document.createElementNS(svgNS,"line");
-    line.setAttribute("x1", PAD.left); line.setAttribute("x2", VB_W-PAD.right);
-    line.setAttribute("y1", 0); line.setAttribute("y2", 0);
-    line.setAttribute("class", "gridline" + (i===0 ? " zero" : ""));
-    g.appendChild(line);
-
-    const label = document.createElementNS(svgNS,"text");
-    label.setAttribute("x", PAD.left - 10); label.setAttribute("y", 4);
-    label.setAttribute("text-anchor","end"); label.setAttribute("class","axis-label");
-    g.appendChild(label);
-
-    gridGroup.appendChild(g);
-    gridTicks.push({ g, label });
-  }
-
-  // eixo X (fixo pra temporada toda, não muda com a seleção)
-  RACES.forEach((r,i)=>{
-    const x = xFor(i);
-    const label = document.createElementNS(svgNS,"text");
-    label.setAttribute("x", x); label.setAttribute("y", VB_H - PAD.bottom + 26);
-    label.setAttribute("class","race-label");
-    label.textContent = r;
-    xAxisGroup.appendChild(label);
+/* monta a série do gráfico a partir dos pilotos carregados; chamado
+   uma vez por temporada, logo depois de loadData() */
+function buildChart(){
+  chart = createLineChart({
+    svg: document.getElementById("chart"),
+    tooltip: document.getElementById("tooltip"),
+    xLabels: RACES,
+    xLabelsFull: RACE_FULL,
+    valueLabel: "pts acumulados",
   });
-
-  const tooltip = document.getElementById("tooltip");
-
-  driverEls.clear();
-  DRIVERS.forEach(d=>{
-    const team = TEAMS[d.team];
-    const isSecond = SECOND_DRIVER.has(d.id);
-
-    const path = document.createElementNS(svgNS,"path");
-    path.setAttribute("class","driver-line hidden");
-    path.setAttribute("stroke", team.color);
-    if (isSecond) path.setAttribute("stroke-dasharray","6 4");
-    path.dataset.id = d.id;
-    linesGroup.appendChild(path);
-
-    const dots = d.pts.map((v,i)=>{
-      const c = document.createElementNS(svgNS,"circle");
-      c.setAttribute("r", 3.4);
-      c.setAttribute("fill", team.color);
-      c.setAttribute("class","pt-dot hidden");
-      c.dataset.id = d.id;
-
-      c.addEventListener("mouseenter", ()=>{
-        highlight(d.id, true);
-        const rect = svg.getBoundingClientRect();
-        const scaleX = rect.width / VB_W, scaleY = rect.height / VB_H;
-        const cx = parseFloat(c.getAttribute("cx"));
-        const cy = parseFloat(c.getAttribute("cy"));
-        tooltip.style.left = (cx*scaleX) + "px";
-        tooltip.style.top = (cy*scaleY) + "px";
-        tooltip.querySelector(".sw").style.background = team.color;
-        tooltip.querySelector(".tt-name").innerHTML = d.flag + " " + d.name;
-        tooltip.querySelector(".tt-race").textContent = RACE_FULL[i];
-        tooltip.querySelector(".tt-pts").textContent = d.pts[i] + " pts acumulados";
-        tooltip.style.opacity = 1;
-      });
-      c.addEventListener("mouseleave", ()=>{
-        highlight(d.id, false);
-        tooltip.style.opacity = 0;
-      });
-      dotsGroup.appendChild(c);
-      return c;
-    });
-
-    driverEls.set(d.id, { path, dots });
-  });
-
-  chartBuilt = true;
+  chart.setSeries(DRIVERS.map(d => ({
+    id: d.id,
+    color: TEAMS[d.team].color,
+    dashed: SECOND_DRIVER.has(d.id),
+    label: `${d.flag} ${d.name}`,
+    pts: d.pts,
+  })));
+  updateChart();
 }
-
-/* anima o número exibido de um valor antigo até o novo, em vez de
-   trocar o texto instantaneamente — acompanha visualmente a mesma
-   duração/curva da transição das linhas quando o eixo Y rescala. */
-function tweenLabel(el, from, to, duration = 500){
-  if (el._tweenRaf) cancelAnimationFrame(el._tweenRaf);
-  if (from === to){ el.textContent = Math.round(to); return; }
-  const start = performance.now();
-  function step(now){
-    const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = Math.round(from + (to - from) * eased);
-    el._tweenRaf = t < 1 ? requestAnimationFrame(step) : null;
-  }
-  el._tweenRaf = requestAnimationFrame(step);
-}
-
-let prevMaxY = null;
 
 /* redesenha o gráfico com quem estiver marcado como visível no momento */
-function renderChart(){
-  if (!chartBuilt) buildChartSkeleton();
-
-  const shown = DRIVERS.filter(d => visible.has(d.id));
-  const maxPts = shown.reduce((m,d) => Math.max(m, d.pts[d.pts.length-1]), 0);
-  MAX_Y = niceAxis(maxPts).max;
-  GRID_STEP = MAX_Y / GRID_TICKS;
-
-  for (let i=0; i<=GRID_TICKS; i++){
-    const v = GRID_STEP * i;
-    const y = yFor(v);
-    gridTicks[i].g.style.transform = `translateY(${y}px)`;
-    const fromV = prevMaxY == null ? v : (prevMaxY / GRID_TICKS) * i;
-    tweenLabel(gridTicks[i].label, fromV, v);
-  }
-  prevMaxY = MAX_Y;
-
-  DRIVERS.forEach(d=>{
-    const els = driverEls.get(d.id);
-    const isVisible = visible.has(d.id);
-    const points = d.pts.map((v,i)=>[xFor(i), yFor(v)]);
-    const dAttr = points.map((p,i)=> (i===0?"M":"L") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
-    els.path.setAttribute("d", dAttr);
-    els.path.classList.toggle("hidden", !isVisible);
-    points.forEach((p,i)=>{
-      els.dots[i].setAttribute("cx", p[0]); els.dots[i].setAttribute("cy", p[1]);
-      els.dots[i].classList.toggle("hidden", !isVisible);
-    });
-  });
-}
-
-/* ao passar o mouse num ponto, apaga um pouco as outras linhas pra
-   destacar a que está sendo observada */
-function highlight(id, on){
-  document.querySelectorAll(`.driver-line[data-id="${id}"]`).forEach(l=>{
-    l.classList.toggle("hot", on && visible.has(id));
-  });
-  if (!visible.has(id)) return;
-  document.querySelectorAll(".driver-line:not(.hidden)").forEach(l=>{
-    if (l.dataset.id !== id) l.classList.toggle("dim", on);
-  });
+function updateChart(){
+  chart.setVisible(visible);
+  chart.render();
 }
 
 /* =========================================================
@@ -558,19 +325,19 @@ function renderConstructors(){
    ========================================================= */
 document.getElementById("btn-top5").addEventListener("click", ()=>{
   visible = new Set(DRIVERS.slice(0,5).map(d=>d.id));
-  syncChipStates(); renderChart();
+  syncChipStates(); updateChart();
 });
 document.getElementById("btn-top10").addEventListener("click", ()=>{
   visible = new Set(DRIVERS.slice(0,10).map(d=>d.id));
-  syncChipStates(); renderChart();
+  syncChipStates(); updateChart();
 });
 document.getElementById("btn-all").addEventListener("click", ()=>{
   visible = new Set(DRIVERS.map(d=>d.id));
-  syncChipStates(); renderChart();
+  syncChipStates(); updateChart();
 });
 document.getElementById("btn-none").addEventListener("click", ()=>{
   visible = new Set();
-  syncChipStates(); renderChart();
+  syncChipStates(); updateChart();
 });
 
 /* =========================================================
@@ -582,8 +349,9 @@ document.getElementById("btn-none").addEventListener("click", ()=>{
 async function loadSeasonOptions(){
   const select = document.getElementById("season-select");
   try{
-    const data = await fetchJSON(`${API}/seasons.json?limit=100`);
+    const data = await fetchCached(`${API}/seasons.json?limit=100`, TTL_HISTORIC);
     const seasons = data.MRData.SeasonTable.Seasons.map(s => Number(s.season)).sort((a,b) => b-a);
+    LATEST_SEASON = seasons[0];
     select.innerHTML = seasons.map(y => `<option value="${y}">${y}</option>`).join("");
   } catch (err){
     // se a lista de temporadas falhar, ao menos deixa a atual escolhível
@@ -595,11 +363,8 @@ async function loadSeasonOptions(){
 /* limpa tudo que foi montado pra temporada anterior antes de buscar
    os dados da temporada nova escolhida na caixa de seleção */
 function resetForNewSeason(){
-  chartBuilt = false;
-  driverEls.clear();
-  gridTicks.length = 0;
+  chart = null;
   SECOND_DRIVER.clear();
-  prevMaxY = null;
   visible = new Set();
 
   document.getElementById("podium").innerHTML = '<div class="state-msg">Carregando pódio…</div>';
@@ -625,7 +390,7 @@ async function init(){
     await loadData();
     renderPodium();
     renderChips();
-    renderChart();
+    buildChart();
     renderStandings();
     renderRaceStrip();
     renderConstructors();

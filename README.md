@@ -25,7 +25,13 @@ Times ou pilotos que não estão nas listas fixas do código (cores de equipe, b
 |---|---|
 | `index.html` | Estrutura da página (títulos, seções, onde cada bloco vai) |
 | `style.css` | Toda a aparência — cores, layout, fontes, animações |
-| `script.js` | Toda a lógica — busca os dados, desenha o gráfico, monta as tabelas |
+| `script.js` | Lógica específica da home — busca os dados, monta pódio, tabela, chips |
+| `js/api.js` | Acesso à Jolpica F1 API (fetch com retry, pool de requisições, cache em `localStorage`) |
+| `js/teams.js` | Cor/nome de cada equipe, bandeiras e siglas de circuito |
+| `js/format.js` | Formatação de datas em pt-BR |
+| `js/chart.js` | Motor do gráfico SVG de evolução de pontos, reaproveitável por outras páginas |
+
+`script.js` é carregado como módulo ES (`<script type="module">`) e importa dos arquivos em `js/` — por isso, rodando localmente com `file://` direto no navegador o Chrome bloqueia os módulos por CORS; sirva a pasta com um servidor estático simples (ex. `python -m http.server`) pra testar.
 
 ## Rodando localmente
 
