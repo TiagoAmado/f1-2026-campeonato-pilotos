@@ -139,11 +139,13 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 - [x] Calculadora "o que falta pro título" — cálculo local a partir da diferença de pontos e corridas restantes (considera as corridas restantes que têm sprint, usando o campo `Sprint` do calendário já buscado). Callout na home, acima da tabela de classificação. Simplificação: só compara líder x 2º colocado, não todos os rivais matematicamente ainda vivos.
 - [x] Comparador cabeça a cabeça entre dois pilotos (`comparador.html?a=&b=&season=`) — pontos, vitórias, pódios, poles e confrontos diretos (quem terminou na frente em cada rodada em comum). `js/driverStats.js` extraído de `piloto.js` pra buscar os dados de cada lado sem duplicar lógica.
-- [ ] Ranking de paradas nos boxes (mais rápidas da corrida/temporada) — endpoint `/{season}/{round}/pitstops.json`.
-- [ ] Ranking de voltas mais rápidas da temporada.
+- [x] Ranking de paradas nos boxes (`paradas.html?season=`) — endpoint `/{season}/{round}/pitstops.json`, uma chamada por rodada (`loadPool`). Só tem dado a partir de ~2012; temporadas mais antigas mostram mensagem em vez de erro.
+- [x] Ranking de voltas mais rápidas da temporada (`voltas-rapidas.html?season=`) — uma entrada por corrida (quem cravou a mais rápida), a partir do mesmo `/{season}/{round}/results.json` já usado em `corrida.html`. Só tem dado a partir de 2004.
 - [ ] Estatística de confiabilidade (abandonos por equipe/motor), usando o campo de status já presente em `/results`.
 - [ ] Alternância de idioma PT/EN — escopo bem maior que os outros itens (toca toda string do site, todas as páginas); tratar como esforço dedicado à parte, não bundlar com os itens menores.
 - [ ] Cartão de compartilhamento estilo "pôster vintage" do pódio/classificação atual, pra redes sociais.
+
+> **Cuidado ao ordenar por tempo/duração**: os campos `duration` (paradas) e `Time.time` (voltas) vêm como string no formato `SS.mmm` OU `M:SS.mmm` quando passam de 1 minuto (paradas muito longas por problema no carro, safety car etc.). `parseFloat()` sozinho corta a string no `:` e devolve só os minutos, o que já causou um bug real aqui (uma parada de "1:02" era ordenada como se fosse "1", ficando no topo do ranking de mais rápidas). Sempre converter pra segundos totais antes de comparar (ver `durationToSeconds`/`timeToSeconds` em `js/pages/paradas.js`/`voltas-rapidas.js`).
 
 **Dependência**: Fases 0-2 (reaproveita páginas e dados já buscados).
 
