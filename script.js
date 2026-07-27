@@ -4,11 +4,16 @@
    Como este arquivo funciona, resumido:
    1. loadData()       busca os dados AO VIVO na API da Jolpica F1
                         (pontuação, corridas, vencedores, equipes),
-                        com cache em localStorage (js/api.js).
-   2. as funções renderX() pegam esses dados e escrevem o HTML/SVG
-      de cada parte da página (pódio, gráfico, tabela, etc).
+                        com cache em localStorage (js/api.js). Só
+                        busca e guarda estado bruto — não escreve
+                        texto na tela.
+   2. renderAll()      pega o estado já carregado e chama todas as
+                        funções renderX() (pódio, gráfico, tabela
+                        etc). Roda depois de loadData() e de novo
+                        toda vez que o idioma muda (sem refazer
+                        nenhuma chamada à API).
    3. init() (lá no final do arquivo) chama loadData() e depois
-      todas as renderX(), na ordem certa, quando a página abre.
+      renderAll(), quando a página abre.
 
    Nenhum resultado de corrida fica fixo aqui no código — tudo é
    buscado de novo (ou vem do cache local), toda vez que a página é
@@ -20,6 +25,7 @@ import { teamMeta, flagFor, codeFor } from "./js/teams.js";
 import { fmtDate, fmtDateLong } from "./js/format.js";
 import { createLineChart } from "./js/chart.js";
 import { generatePodiumCard, downloadCanvas } from "./js/shareCard.js";
+import { getLang, t, applyStaticTranslations, renderLangToggle } from "./js/i18n.js";
 
 let SEASON = 2026; // trocado pela caixa de seleção de temporada, lá embaixo
 let LATEST_SEASON = null; // temporada mais recente disponível na API (define o TTL do cache)
@@ -27,18 +33,30 @@ let LATEST_SEASON = null; // temporada mais recente disponível na API (define o
 /* =========================================================
    ESTADO
    (variáveis que guardam os dados já carregados, pra todas as
-   funções de renderização poderem usar)
+   funções de renderização poderem usar — inclusive de novo, na
+   mesma temporada, quando o idioma muda)
    ========================================================= */
 let TEAMS = {};
-let RACES = [];
-let RACE_FULL = [];
+let RACES_RAW = [];    // corridas já concluídas, como a API devolve
+let RACES = [];        // siglas curtas do eixo X (não dependem de idioma)
 let DRIVERS = [];
 let WINNERS = [];
 let CONSTRUCTORS = [];
+let FULL_CALENDAR = null;
+let TOTAL_ROUNDS = 0;
+let TOTAL_COMPLETED = 0;
 let leaderPts = 0;
 let visible = new Set();
 const SECOND_DRIVER = new Set();
 let chart = null;
+
+/* descrição completa de cada corrida pro eixo X do gráfico e pra tira
+   de vencedores — recalculada a cada render porque o formato de data
+   muda com o idioma */
+function raceFullLabels(){
+  const lang = getLang();
+  return RACES_RAW.map(r => `${r.Circuit.Location.locality} (${fmtDate(r.date, lang)})`);
+}
 
 /* calcula em quantas rodadas restantes o título fica matematicamente
    decidido, comparando o líder com o 2º colocado (simplificação comum
@@ -78,20 +96,24 @@ function renderTitleMath(math, leader){
   let text;
   if (math.seasonOver){
     text = math.gap > 0
-      ? `🏆 Temporada encerrada — ${leader.name} é o campeão.`
-      : `Temporada encerrada.`;
+      ? t("title_math_season_over_champion", { name: leader.name })
+      : t("title_math_season_over");
   } else if (math.decidedNow){
-    text = `🏆 Título matematicamente decidido: ${leader.name} não pode mais ser alcançado.`;
+    text = t("title_math_decided", { name: leader.name });
   } else if (math.roundsToDecide){
-    text = `Faltam ${math.roundsToDecide} corrida${math.roundsToDecide === 1 ? "" : "s"} pra ${leader.name} confirmar o título matematicamente, se a diferença atual se mantiver.`;
+    text = math.roundsToDecide === 1
+      ? t("title_math_rounds_one", { n: math.roundsToDecide, name: leader.name })
+      : t("title_math_rounds_many", { n: math.roundsToDecide, name: leader.name });
   } else {
-    text = `Título ainda em aberto até a última corrida — ${math.maxRemainingTotal} pontos em disputa.`;
+    text = t("title_math_open", { max: math.maxRemainingTotal });
   }
   el.textContent = text;
 }
 
 /* =========================================================
    CARREGAMENTO DOS DADOS (Jolpica F1 API)
+   — só busca e guarda estado bruto, não escreve texto na tela
+   (isso é papel de renderHeaderTexts/renderAll, chamadas depois)
    ========================================================= */
 async function loadData(){
   // temporada em andamento cacheia por pouco tempo (dados mudam a cada
@@ -106,13 +128,14 @@ async function loadData(){
   ]);
 
   const races = winnersData.MRData.RaceTable.Races;
-  if (races.length === 0) throw new Error(`Nenhuma corrida concluída encontrada para ${SEASON}.`);
+  if (races.length === 0) throw new Error(t("state_error_no_races", { season: SEASON }));
 
-  const totalRounds = fullCalendar.MRData.RaceTable.Races.length;
-  const totalCompleted = races.length;
+  FULL_CALENDAR = fullCalendar;
+  TOTAL_ROUNDS = fullCalendar.MRData.RaceTable.Races.length;
+  TOTAL_COMPLETED = races.length;
+  RACES_RAW = races;
 
   RACES = races.map(r => codeFor(r.Circuit.circuitId, r.Circuit.Location.locality));
-  RACE_FULL = races.map(r => `${r.Circuit.Location.locality} (${fmtDate(r.date)})`);
   WINNERS = races.map(r => ({
     id: r.Results[0].Driver.driverId,
     team: r.Results[0].Constructor.constructorId,
@@ -164,10 +187,6 @@ async function loadData(){
 
   leaderPts = DRIVERS[0].pts[DRIVERS[0].pts.length - 1];
 
-  if (DRIVERS.length > 1){
-    renderTitleMath(computeTitleMath(fullCalendar, totalCompleted, DRIVERS[0], DRIVERS[1]), DRIVERS[0]);
-  }
-
   const seenTeams = new Set();
   DRIVERS.forEach(d => {
     if (seenTeams.has(d.team)) SECOND_DRIVER.add(d.id);
@@ -175,36 +194,54 @@ async function loadData(){
   });
 
   visible = new Set(DRIVERS.slice(0, 5).map(d => d.id));
+}
 
-  const lastRace = races[races.length - 1];
+/* =========================================================
+   RENDER: textos derivados do estado (título da página, topbar,
+   sub-títulos de seção, calculadora de título, rodapé) — tudo isso
+   depende do idioma atual, então roda de novo a cada troca de idioma
+   ========================================================= */
+function renderHeaderTexts(){
+  const lang = getLang();
+  const lastRace = RACES_RAW[RACES_RAW.length - 1];
   const winnerDriver = DRIVERS.find(d => d.id === WINNERS[WINNERS.length - 1].id);
 
-  document.title = `F1 ${SEASON} · Campeonato de Pilotos`;
-  document.getElementById("eyebrow-season").textContent =
-    `Fórmula 1 · Campeonato Mundial de Pilotos ${SEASON}`;
+  document.title = t("page_title_home", { season: SEASON });
+  document.getElementById("eyebrow-season").textContent = t("hero_eyebrow", { season: SEASON });
 
   document.getElementById("live-dot").classList.remove("err");
-  document.getElementById("tb-round").textContent = `RODADA ${totalCompleted}/${totalRounds} CONCLUÍDA`;
+  document.getElementById("tb-round").textContent = t("topbar_round", { completed: TOTAL_COMPLETED, total: TOTAL_ROUNDS });
   document.getElementById("tb-race").textContent = lastRace.raceName;
   document.getElementById("tb-winner").innerHTML = winnerDriver
-    ? `Vencedor: ${winnerDriver.flag} ${winnerDriver.name}`
+    ? t("topbar_winner", { flag: winnerDriver.flag, name: winnerDriver.name })
     : "";
 
-  document.getElementById("hero-sub").textContent =
-    `Pontuação de todos os ${DRIVERS.length} pilotos após as ${totalCompleted} rodadas já disputadas em ${SEASON} — dados ao vivo da Jolpica F1 API, com gráfico dinâmico para comparar quem você quiser.`;
+  document.getElementById("hero-sub").textContent = t("hero_sub", {
+    count: DRIVERS.length, completed: TOTAL_COMPLETED, season: SEASON,
+  });
 
-  document.getElementById("standings-sub").textContent =
-    `Após a rodada ${totalCompleted} de ${totalRounds} — ${lastRace.raceName}, ${fmtDateLong(lastRace.date)}.`;
+  document.getElementById("standings-sub").textContent = t("standings_sub", {
+    completed: TOTAL_COMPLETED, total: TOTAL_ROUNDS, race: lastRace.raceName, date: fmtDateLong(lastRace.date, lang),
+  });
 
-  document.getElementById("calendar-sub").textContent =
-    `As ${totalCompleted} corridas já disputadas em ${SEASON}.`;
+  document.getElementById("calendar-sub").textContent = t("winners_sub", {
+    completed: TOTAL_COMPLETED, season: SEASON,
+  });
 
-  document.getElementById("footer-meta").textContent =
-    `Dados oficiais da FIA via Jolpica F1 API · ${DRIVERS.length} pilotos · ${Object.keys(TEAMS).length} equipes · ${totalCompleted}/${totalRounds} corridas`;
+  document.getElementById("footer-meta").textContent = t("footer_meta", {
+    drivers: DRIVERS.length, teams: Object.keys(TEAMS).length, completed: TOTAL_COMPLETED, total: TOTAL_ROUNDS,
+  });
 
   const now = new Date();
-  document.getElementById("footer-time").textContent =
-    `Atualizado ao vivo em ${now.toLocaleDateString("pt-BR")} às ${now.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" })}`;
+  const locale = lang === "en" ? "en-US" : "pt-BR";
+  document.getElementById("footer-time").textContent = t("footer_updated", {
+    date: now.toLocaleDateString(locale),
+    time: now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }),
+  });
+
+  if (DRIVERS.length > 1){
+    renderTitleMath(computeTitleMath(FULL_CALENDAR, TOTAL_COMPLETED, DRIVERS[0], DRIVERS[1]), DRIVERS[0]);
+  }
 }
 
 /* =========================================================
@@ -215,13 +252,14 @@ function renderPodium(){
   el.innerHTML = DRIVERS.slice(0,3).map((d,i)=>{
     const team = TEAMS[d.team];
     const last = d.pts[d.pts.length-1];
-    const gap = i===0 ? "Líder do campeonato" : `${leaderPts - last} pts atrás do líder`;
+    const gap = i===0 ? t("podium_leader") : t("podium_gap", { gap: leaderPts - last });
+    const winsLabel = d.wins === 1 ? t("podium_win") : t("podium_wins");
     return `
       <div class="p-card" style="--team-color:${team.color}">
-        <div class="rank"><span>P${i+1}</span><span class="badge">${d.wins} vitória${d.wins===1?"":"s"}</span></div>
+        <div class="rank"><span>P${i+1}</span><span class="badge">${d.wins} ${winsLabel}</span></div>
         <p class="name"><a href="piloto.html?id=${d.id}&season=${SEASON}">${d.flag} ${d.name}</a></p>
         <p class="team"><a href="equipe.html?id=${d.team}&season=${SEASON}">${team.name}</a> · #${d.num}</p>
-        <p class="pts">${last}<span>pts</span></p>
+        <p class="pts">${last}<span>${t("podium_pts")}</span></p>
         <p class="gap">${gap}</p>
       </div>`;
   }).join("");
@@ -290,14 +328,15 @@ function syncChipStates(){
    ========================================================= */
 
 /* monta a série do gráfico a partir dos pilotos carregados; chamado
-   uma vez por temporada, logo depois de loadData() */
+   sempre que os dados ou o idioma mudam (o esqueleto do SVG é
+   reconstruído do zero, mas a seleção em "visible" é preservada) */
 function buildChart(){
   chart = createLineChart({
     svg: document.getElementById("chart"),
     tooltip: document.getElementById("tooltip"),
     xLabels: RACES,
-    xLabelsFull: RACE_FULL,
-    valueLabel: "pts acumulados",
+    xLabelsFull: raceFullLabels(),
+    valueLabel: t("chart_pts_label"),
   });
   chart.setSeries(DRIVERS.map(d => ({
     id: d.id,
@@ -347,14 +386,15 @@ function renderStandings(){
    RENDER: TIRA DE VENCEDORES (um cartão por corrida já disputada)
    ========================================================= */
 function renderRaceStrip(){
+  const raceFull = raceFullLabels();
   const el = document.getElementById("race-strip");
   el.innerHTML = WINNERS.map((w,i)=>{
     const d = DRIVERS.find(x=>x.id===w.id);
     const team = TEAMS[w.team];
     return `
       <a class="race-card" href="corrida.html?season=${SEASON}&round=${w.round}" style="--c:${team.color}">
-        <div class="rnum">RODADA ${i+1}</div>
-        <div class="rname">${RACE_FULL[i]}</div>
+        <div class="rnum">${t("winners_round", { n: i + 1 })}</div>
+        <div class="rname">${raceFull[i]}</div>
         <div class="rwinner">${d ? d.flag + " " + d.name : w.id}</div>
         <div class="rteam">${team.name}</div>
       </a>`;
@@ -373,9 +413,23 @@ function renderConstructors(){
         <span class="pos mono">${i+1}</span>
         <span class="sw"></span>
         <span class="cname"><a href="equipe.html?id=${c.team}&season=${SEASON}">${team.name}</a></span>
-        <span class="cpts mono">${c.pts} pts</span>
+        <span class="cpts mono">${c.pts} ${t("podium_pts")}</span>
       </div>`;
   }).join("");
+}
+
+/* chama todas as funções de renderização a partir do estado já
+   carregado — usado depois de loadData() e de novo toda vez que o
+   idioma muda (sem refazer nenhuma chamada à API) */
+function renderAll(){
+  if (!DRIVERS.length) return;
+  renderHeaderTexts();
+  renderPodium();
+  renderChips();
+  buildChart();
+  renderStandings();
+  renderRaceStrip();
+  renderConstructors();
 }
 
 /* =========================================================
@@ -402,7 +456,7 @@ document.getElementById("btn-share-card").addEventListener("click", async (e)=>{
   const btn = e.currentTarget;
   const originalText = btn.textContent;
   btn.disabled = true;
-  btn.textContent = "Gerando…";
+  btn.textContent = t("share_card_generating");
   try{
     const canvas = await generatePodiumCard({ season: SEASON, drivers: DRIVERS, teams: TEAMS });
     downloadCanvas(canvas, `f1-${SEASON}-podio.png`);
@@ -413,6 +467,13 @@ document.getElementById("btn-share-card").addEventListener("click", async (e)=>{
     btn.textContent = originalText;
   }
 });
+
+/* alternância de idioma: troca o texto estático (data-i18n) e depois
+   re-renderiza tudo que já foi carregado, sem refazer chamadas à API */
+renderLangToggle(document.getElementById("lang-toggle"), () => {
+  renderAll();
+});
+applyStaticTranslations();
 
 /* =========================================================
    CAIXA DE SELEÇÃO DE TEMPORADA
@@ -440,7 +501,7 @@ function resetForNewSeason(){
   SECOND_DRIVER.clear();
   visible = new Set();
 
-  document.getElementById("podium").innerHTML = '<div class="state-msg">Carregando pódio…</div>';
+  document.getElementById("podium").innerHTML = `<div class="state-msg">${t("podium_loading")}</div>`;
   document.getElementById("chip-groups").innerHTML = "";
   document.getElementById("chart").innerHTML = "";
   document.getElementById("standings-body").innerHTML = "";
@@ -463,17 +524,12 @@ document.getElementById("season-select").addEventListener("change", (e)=>{
 async function init(){
   try{
     await loadData();
-    renderPodium();
-    renderChips();
-    buildChart();
-    renderStandings();
-    renderRaceStrip();
-    renderConstructors();
+    renderAll();
   } catch (err){
     document.getElementById("live-dot").classList.add("err");
-    document.getElementById("tb-round").textContent = "erro ao carregar dados ao vivo";
+    document.getElementById("tb-round").textContent = t("state_error_round");
     document.getElementById("podium").innerHTML =
-      `<div class="state-msg error">Não foi possível carregar os dados ao vivo agora (${err.message}). Tente recarregar a página em alguns instantes.</div>`;
+      `<div class="state-msg error">${t("state_error_load", { err: err.message })}</div>`;
     console.error(err);
   }
 }

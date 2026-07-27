@@ -26,14 +26,15 @@
   <div class="topbar-inner">
     <span class="topbar-lead">
       <span class="live-dot" id="live-dot"></span>
-      <b>TEMPORADA</b>
+      <b data-i18n="topbar_season">TEMPORADA</b>
       <select id="season-select" class="season-select" aria-label="Selecionar temporada"></select>
     </span><span class="sep">·</span>
     <span id="tb-round">carregando…</span><span class="sep">·</span>
     <span id="tb-race"></span><span class="sep">·</span>
     <span id="tb-winner"></span><span class="sep">·</span>
-    <a class="nav-link" href="calendario.html">Calendário completo</a><span class="sep">·</span>
-    <a class="nav-link" href="comparador.html">Comparar pilotos</a>
+    <a class="nav-link" href="calendario.html" data-i18n="nav_calendar_full">Calendário completo</a><span class="sep">·</span>
+    <a class="nav-link" href="comparador.html" data-i18n="nav_compare">Comparar pilotos</a><span class="sep">·</span>
+    <span class="lang-toggle" id="lang-toggle"></span>
   </div>
 </div>
 
@@ -42,26 +43,26 @@
   <!-- título da página + pódio com o Top 3 do campeonato -->
   <section class="hero" style="padding-top:56px;">
     <p class="eyebrow" id="eyebrow-season">Fórmula 1 · Campeonato Mundial de Pilotos 2026</p>
-    <h1>Classificação atualizada,<br>corrida a corrida.</h1>
+    <h1><span data-i18n="hero_title_l1">Classificação atualizada,</span><br><span data-i18n="hero_title_l2">corrida a corrida.</span></h1>
     <p class="sub" id="hero-sub">Carregando dados ao vivo da temporada 2026…</p>
 
-    <div class="podium" id="podium"><div class="state-msg">Carregando pódio…</div></div>
+    <div class="podium" id="podium"><div class="state-msg" data-i18n="podium_loading">Carregando pódio…</div></div>
 
-    <button id="btn-share-card" class="share-card-btn" hidden>⬇ Baixar cartão do pódio</button>
+    <button id="btn-share-card" class="share-card-btn" data-i18n="share_card_btn" hidden>⬇ Baixar cartão do pódio</button>
   </section>
 
   <!-- gráfico de evolução de pontos, com os chips de cada piloto -->
   <section id="chart-section">
     <div class="sec-head">
       <div>
-        <h2>Evolução de pontos por corrida</h2>
-        <p>Eixo X = corridas da temporada · Eixo Y = pontos acumulados · cores = equipe. Clique nos pilotos abaixo para escolher quem aparece no gráfico.</p>
+        <h2 data-i18n="chart_title">Evolução de pontos por corrida</h2>
+        <p data-i18n="chart_desc">Eixo X = corridas da temporada · Eixo Y = pontos acumulados · cores = equipe. Clique nos pilotos abaixo para escolher quem aparece no gráfico.</p>
       </div>
       <div class="toolbar">
-        <button id="btn-top5">Top 5</button>
-        <button id="btn-top10">Top 10</button>
-        <button id="btn-all">Todos</button>
-        <button id="btn-none">Limpar</button>
+        <button id="btn-top5" data-i18n="chart_top5">Top 5</button>
+        <button id="btn-top10" data-i18n="chart_top10">Top 10</button>
+        <button id="btn-all" data-i18n="chart_all">Todos</button>
+        <button id="btn-none" data-i18n="chart_clear">Limpar</button>
       </div>
     </div>
 
@@ -82,7 +83,7 @@
   <section id="standings-section">
     <div class="sec-head">
       <div>
-        <h2>Classificação de pilotos</h2>
+        <h2 data-i18n="standings_title">Classificação de pilotos</h2>
         <p id="standings-sub">Carregando…</p>
       </div>
     </div>
@@ -91,12 +92,12 @@
       <table>
         <thead>
           <tr>
-            <th>Pos</th>
-            <th>Piloto</th>
-            <th>Equipe</th>
-            <th class="num">Pontos</th>
-            <th class="num">Vitórias</th>
-            <th class="num">Diferença</th>
+            <th data-i18n="standings_th_pos">Pos</th>
+            <th data-i18n="standings_th_driver">Piloto</th>
+            <th data-i18n="standings_th_team">Equipe</th>
+            <th class="num" data-i18n="standings_th_points">Pontos</th>
+            <th class="num" data-i18n="standings_th_wins">Vitórias</th>
+            <th class="num" data-i18n="standings_th_gap">Diferença</th>
           </tr>
         </thead>
         <tbody id="standings-body"></tbody>
@@ -108,7 +109,7 @@
   <section id="calendar-section">
     <div class="sec-head">
       <div>
-        <h2>Vencedores de cada etapa</h2>
+        <h2 data-i18n="winners_title">Vencedores de cada etapa</h2>
         <p id="calendar-sub">Corridas já disputadas em 2026.</p>
       </div>
     </div>
@@ -119,8 +120,8 @@
   <section id="constructors-section">
     <div class="sec-head">
       <div>
-        <h2>Campeonato de Construtores</h2>
-        <p>Soma dos pontos das duas equipes de cada montadora.</p>
+        <h2 data-i18n="constructors_title">Campeonato de Construtores</h2>
+        <p data-i18n="constructors_desc">Soma dos pontos das duas equipes de cada montadora.</p>
       </div>
     </div>
     <div class="cons-grid" id="cons-grid"></div>
@@ -130,7 +131,7 @@
 
 <footer>
   <div class="wrap">
-    <span id="footer-meta">Dados oficiais da FIA via Jolpica F1 API</span>
+    <span id="footer-meta" data-i18n="footer_credit">Dados oficiais da FIA via Jolpica F1 API</span>
     <span id="footer-time"></span>
   </div>
 </footer>
