@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calendário · F1 Campeonato de Pilotos</title>
-<meta name="description" content="Calendário completo da temporada de Fórmula 1 — corridas já disputadas e próximas etapas, com data, circuito e contagem regressiva.">
+<title>Ranking de voltas rápidas · F1 Campeonato de Pilotos</title>
+<meta name="description" content="Ranking das voltas mais rápidas da temporada de Fórmula 1, corrida a corrida.">
 <meta name="theme-color" content="#0A0C0A">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0C0A'/%3E%3Ctext x='32' y='43' font-family='Arial,sans-serif' font-weight='900' font-size='30' fill='%23E2762A' text-anchor='middle'%3EF1%3C/text%3E%3C/svg%3E">
 
@@ -24,14 +24,13 @@
 <div class="wrap">
 
   <section class="hero" style="padding-top:56px;">
-    <p class="eyebrow">Calendário completo</p>
-    <h1>Todas as corridas<br>da temporada.</h1>
-    <p class="sub" id="hero-sub">Carregando calendário…</p>
-    <div class="season-rankings" id="season-rankings"></div>
+    <p class="eyebrow">Ranking da temporada</p>
+    <h1>Voltas mais rápidas.</h1>
+    <p class="sub" id="hero-sub">Carregando voltas mais rápidas…</p>
   </section>
 
-  <section id="calendar-list-section">
-    <div class="cal-list" id="cal-list"><div class="state-msg">Carregando corridas…</div></div>
+  <section id="fastlaps-section">
+    <div id="fastlaps-content"><div class="state-msg">Carregando voltas…</div></div>
   </section>
 
 </div>
@@ -42,6 +41,6 @@
   </div>
 </footer>
 
-<script type="module" src="js/pages/calendario.js"></script>
+<script type="module" src="js/pages/voltas-rapidas.js"></script>
 </body>
 </html>

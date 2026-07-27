@@ -55,6 +55,9 @@ async function load(){
     setPageTitle(`Calendário · ${SEASON}`);
     document.getElementById("hero-sub").textContent =
       `${races.length} corridas na temporada ${SEASON}.`;
+    document.getElementById("season-rankings").innerHTML = `
+      <a href="paradas.html?season=${SEASON}">Paradas mais rápidas →</a>
+      <a href="voltas-rapidas.html?season=${SEASON}">Voltas mais rápidas →</a>`;
 
     listEl.innerHTML = races.map((r, i) => {
       const isNext = i === nextIdx;
