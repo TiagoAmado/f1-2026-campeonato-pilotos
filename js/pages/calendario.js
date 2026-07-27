@@ -57,7 +57,8 @@ async function load(){
       `${races.length} corridas na temporada ${SEASON}.`;
     document.getElementById("season-rankings").innerHTML = `
       <a href="paradas.html?season=${SEASON}">Paradas mais rápidas →</a>
-      <a href="voltas-rapidas.html?season=${SEASON}">Voltas mais rápidas →</a>`;
+      <a href="voltas-rapidas.html?season=${SEASON}">Voltas mais rápidas →</a>
+      <a href="confiabilidade.html?season=${SEASON}">Confiabilidade por equipe →</a>`;
 
     listEl.innerHTML = races.map((r, i) => {
       const isNext = i === nextIdx;
