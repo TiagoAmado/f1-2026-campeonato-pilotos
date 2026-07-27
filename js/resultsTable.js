@@ -21,7 +21,9 @@ const STATUS_PT = {
   "Lapped": "Voltas de atraso",
 };
 
-function statusText(status){
+/* traduz o status bruto da API ("Accident", "+1 Lap" etc.) pro
+   português; usado aqui e na estatística de confiabilidade */
+export function statusText(status){
   return STATUS_PT[status] || status;
 }
 
