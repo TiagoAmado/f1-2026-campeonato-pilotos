@@ -19,6 +19,7 @@ import { API, fetchCached, loadPool, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from
 import { teamMeta, flagFor, codeFor } from "./js/teams.js";
 import { fmtDate, fmtDateLong } from "./js/format.js";
 import { createLineChart } from "./js/chart.js";
+import { generatePodiumCard, downloadCanvas } from "./js/shareCard.js";
 
 let SEASON = 2026; // trocado pela caixa de seleção de temporada, lá embaixo
 let LATEST_SEASON = null; // temporada mais recente disponível na API (define o TTL do cache)
@@ -224,6 +225,8 @@ function renderPodium(){
         <p class="gap">${gap}</p>
       </div>`;
   }).join("");
+
+  document.getElementById("btn-share-card").hidden = false;
 }
 
 /* =========================================================
@@ -395,6 +398,22 @@ document.getElementById("btn-none").addEventListener("click", ()=>{
   syncChipStates(); updateChart();
 });
 
+document.getElementById("btn-share-card").addEventListener("click", async (e)=>{
+  const btn = e.currentTarget;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Gerando…";
+  try{
+    const canvas = await generatePodiumCard({ season: SEASON, drivers: DRIVERS, teams: TEAMS });
+    downloadCanvas(canvas, `f1-${SEASON}-podio.png`);
+  } catch (err){
+    console.error(err);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+});
+
 /* =========================================================
    CAIXA DE SELEÇÃO DE TEMPORADA
    ========================================================= */
@@ -428,6 +447,7 @@ function resetForNewSeason(){
   document.getElementById("race-strip").innerHTML = "";
   document.getElementById("cons-grid").innerHTML = "";
   document.getElementById("title-math").textContent = "";
+  document.getElementById("btn-share-card").hidden = true;
 }
 
 document.getElementById("season-select").addEventListener("change", (e)=>{
