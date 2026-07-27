@@ -5,6 +5,8 @@
    segue a paleta da Fase 1 automaticamente se ela mudar.
    ========================================================= */
 
+import { t } from "./i18n.js";
+
 const W = 1080, H = 1080;
 
 function cssVar(name){
@@ -55,12 +57,12 @@ export async function generatePodiumCard({ season, drivers, teams }){
 
   ctx.fillStyle = amber;
   ctx.font = '32px Staatliches';
-  ctx.fillText(`TEMPORADA ${season}`, W / 2, 110);
+  ctx.fillText(`${t("topbar_season")} ${season}`, W / 2, 110);
 
   ctx.fillStyle = text;
   ctx.font = '900 62px "Racing Sans One"';
-  ctx.fillText('CLASSIFICAÇÃO', W / 2, 190);
-  ctx.fillText('ATUALIZADA', W / 2, 258);
+  ctx.fillText(t("share_card_title_l1"), W / 2, 190);
+  ctx.fillText(t("share_card_title_l2"), W / 2, 258);
 
   const startY = 360;
   const rowH = 200;
@@ -94,14 +96,14 @@ export async function generatePodiumCard({ season, drivers, teams }){
     ctx.textAlign = 'right';
     ctx.fillStyle = amber;
     ctx.font = '700 46px "JetBrains Mono"';
-    ctx.fillText(`${last} PTS`, W - 80, y + 78);
+    ctx.fillText(`${last} ${t("podium_pts").toUpperCase()}`, W - 80, y + 78);
     ctx.textAlign = 'left';
   });
 
   ctx.textAlign = 'center';
   ctx.fillStyle = text3;
   ctx.font = '22px "JetBrains Mono"';
-  ctx.fillText('DADOS OFICIAIS DA FIA VIA JOLPICA F1 API', W / 2, H - 50);
+  ctx.fillText(t("share_card_footer"), W / 2, H - 50);
 
   return canvas;
 }

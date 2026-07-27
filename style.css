@@ -106,6 +106,18 @@ a{color:inherit;}
 .back-link:hover{color:var(--burnt-amber);}
 .page-title{color:var(--text-2);}
 
+/* ---- alternância de idioma PT/EN ---- */
+.lang-toggle{display:inline-flex;gap:2px;}
+.lang-btn{
+  background:transparent;border:1px solid var(--border);color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.03em;
+  padding:2px 7px;cursor:pointer;transition:.12s;
+}
+.lang-btn:first-child{border-radius:10px 0 0 10px;}
+.lang-btn:last-child{border-radius:0 10px 10px 0;border-left:none;}
+.lang-btn:hover{color:var(--text);}
+.lang-btn.on{background:var(--amber-soft);border-color:var(--burnt-amber);color:var(--burnt-amber);}
+
 /* ---- topo da página (título + pódio top 3) ---- */
 .hero{padding:56px 0 20px;}
 .eyebrow{
