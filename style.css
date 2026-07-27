@@ -152,6 +152,15 @@ a{color:inherit;}
 
 @media (max-width:720px){ .podium{grid-template-columns:1fr;} }
 
+.share-card-btn{
+  margin-top:16px;background:transparent;border:1px solid var(--border);color:var(--text-2);
+  font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.03em;
+  padding:8px 14px;border-radius:20px;cursor:pointer;transition:.15s;
+}
+.share-card-btn:hover:not(:disabled){border-color:var(--burnt-amber);color:var(--text);}
+.share-card-btn:disabled{opacity:.6;cursor:default;}
+.share-card-btn[hidden]{display:none;}
+
 /* ---- blocos genéricos de seção (título + descrição) ---- */
 section{padding:46px 0;position:relative;}
 /* divisor fino "quadriculado" entre seções, no lugar de uma linha simples
