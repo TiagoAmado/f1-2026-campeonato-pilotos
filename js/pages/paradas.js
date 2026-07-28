@@ -7,6 +7,7 @@
 import { API, fetchCached, loadPool, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "../api.js";
 import { teamMeta, flagFor } from "../teams.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 /* a maioria das paradas vem como "2.345" (segundos), mas paradas muito
    longas (problema no carro, safety car etc.) vêm como "1:02.596"
@@ -24,9 +25,11 @@ let LATEST_SEASON = null;
 
 renderSubpageHeader(document.getElementById("topbar"), {
   backHref: SEASON ? `calendario.html?season=${SEASON}` : "calendario.html",
-  backLabel: "Calendário",
-  extra: `<span class="sep">·</span><b>TEMPORADA</b><select id="ps-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  backKey: "nav_calendar",
+  extra: `<span class="sep">·</span><b data-i18n="topbar_season">TEMPORADA</b><select id="ps-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 async function loadSeasonOptions(){
   const seasons = await fetchSeasons();
@@ -46,7 +49,7 @@ async function loadSeasonOptions(){
 
 async function load(){
   const content = document.getElementById("pitstops-content");
-  content.innerHTML = '<div class="state-msg">Carregando paradas…</div>';
+  content.innerHTML = `<div class="state-msg">${t("loading_pitstops")}</div>`;
   try{
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
@@ -57,12 +60,12 @@ async function load(){
     ]);
 
     const races = winnersData.MRData.RaceTable.Races;
-    if (!races.length) throw new Error(`Nenhuma corrida concluída encontrada para ${SEASON}.`);
+    if (!races.length) throw new Error(t("error_no_completed_races", { season: SEASON }));
 
-    setPageTitle(`Paradas mais rápidas · ${SEASON}`);
-    document.title = `Paradas mais rápidas ${SEASON} · F1`;
+    setPageTitle(t("page_title_pitstops", { season: SEASON }));
+    document.title = t("doc_title_pitstops", { season: SEASON });
     document.getElementById("hero-sub").textContent =
-      `As paradas nos boxes mais rápidas entre as ${races.length} corridas já disputadas em ${SEASON}.`;
+      t("pitstops_hero_sub", { count: races.length, season: SEASON });
 
     const standings = standingsData.MRData.StandingsTable.StandingsLists[0]?.DriverStandings || [];
     const driverMap = new Map(standings.map(s => [s.Driver.driverId, {
@@ -80,7 +83,7 @@ async function load(){
 
     const allStops = pitstopsByRound.flat();
     if (!allStops.length){
-      content.innerHTML = `<div class="state-msg">Sem dados de paradas nos boxes pra ${SEASON} (a Jolpica só tem esse dado a partir de ~2012).</div>`;
+      content.innerHTML = `<div class="state-msg">${t("no_pitstop_data", { season: SEASON })}</div>`;
       return;
     }
 
@@ -104,13 +107,13 @@ async function load(){
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>Pos</th><th>Piloto</th><th>Equipe</th><th>Corrida</th><th class="num">Volta</th><th class="num">Duração</th></tr>
+            <tr><th>${t("standings_th_pos")}</th><th>${t("standings_th_driver")}</th><th>${t("standings_th_team")}</th><th>${t("th_race")}</th><th class="num">${t("th_lap")}</th><th class="num">${t("th_duration")}</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar as paradas (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_pitstops", { err: err.message })}</div>`;
     console.error(err);
   }
 }
