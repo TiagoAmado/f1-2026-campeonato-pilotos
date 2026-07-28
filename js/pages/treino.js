@@ -6,20 +6,23 @@
 import { API, fetchCached, TTL_LIVE } from "../api.js";
 import { teamMeta, flagFor } from "../teams.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 const { season: SEASON, round: ROUND } = pageParams();
 
 renderSubpageHeader(document.getElementById("topbar"), {
   backHref: SEASON ? `calendario.html?season=${SEASON}` : "calendario.html",
-  backLabel: "Calendário",
+  backKey: "nav_calendar",
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 async function load(){
   const content = document.getElementById("quali-content");
   if (!SEASON || !ROUND){
-    setPageTitle("Treino classificatório");
-    document.getElementById("race-title").textContent = "Nenhuma corrida selecionada";
-    content.innerHTML = '<div class="state-msg error">Selecione uma corrida no <a href="calendario.html">calendário</a>.</div>';
+    setPageTitle(t("qualifying_eyebrow"));
+    document.getElementById("race-title").textContent = t("no_race_selected");
+    content.innerHTML = `<div class="state-msg error">${t("select_race_prompt")}</div>`;
     return;
   }
   try{
@@ -28,21 +31,26 @@ async function load(){
     if (!race){
       // a Jolpica não devolve nem a corrida quando não há dado de treino
       // pra ela (comum em temporadas bem antigas) — não é um erro real
-      setPageTitle("Treino classificatório");
-      document.getElementById("race-title").textContent = `Rodada ${ROUND} · ${SEASON}`;
-      content.innerHTML = '<div class="state-msg">Sem dados de treino classificatório pra esta corrida.</div>';
+      setPageTitle(t("qualifying_eyebrow"));
+      document.getElementById("race-title").textContent = t("round_season_label", { round: ROUND, season: SEASON });
+      content.innerHTML = `<div class="state-msg">${t("no_qualifying_data")}</div>`;
       return;
     }
 
-    document.title = `${race.raceName} · Treino classificatório`;
-    setPageTitle(`${race.raceName} · Treino`);
+    document.title = t("page_title_qualifying", { name: race.raceName });
+    setPageTitle(t("page_title_qualifying", { name: race.raceName }));
     document.getElementById("race-title").textContent = race.raceName;
-    document.getElementById("hero-sub").textContent =
-      `${race.Circuit.circuitName} · ${race.Circuit.Location.locality}, ${race.Circuit.Location.country} · rodada ${race.round}, temporada ${SEASON}`;
+    document.getElementById("hero-sub").textContent = t("race_meta_line", {
+      circuit: race.Circuit.circuitName,
+      locality: race.Circuit.Location.locality,
+      country: race.Circuit.Location.country,
+      round: race.round,
+      season: SEASON,
+    });
 
     const quali = race.QualifyingResults || [];
     if (!quali.length){
-      content.innerHTML = '<div class="state-msg">Sem dados de treino classificatório pra esta corrida.</div>';
+      content.innerHTML = `<div class="state-msg">${t("no_qualifying_data")}</div>`;
       return;
     }
 
@@ -68,13 +76,13 @@ async function load(){
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>Pos</th><th>Piloto</th><th>Equipe</th><th class="num">Q1</th><th class="num">Q2</th><th class="num">Q3</th></tr>
+            <tr><th>${t("standings_th_pos")}</th><th>${t("standings_th_driver")}</th><th>${t("standings_th_team")}</th><th class="num">Q1</th><th class="num">Q2</th><th class="num">Q3</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar o treino (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_qualifying", { err: err.message })}</div>`;
     console.error(err);
   }
 }

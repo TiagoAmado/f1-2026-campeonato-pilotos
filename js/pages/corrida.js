@@ -6,20 +6,23 @@
 import { API, fetchCached, TTL_LIVE } from "../api.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
 import { renderResultsTable } from "../resultsTable.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 const { season: SEASON, round: ROUND } = pageParams();
 
 renderSubpageHeader(document.getElementById("topbar"), {
   backHref: SEASON ? `calendario.html?season=${SEASON}` : "calendario.html",
-  backLabel: "Calendário",
+  backKey: "nav_calendar",
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 async function load(){
   const content = document.getElementById("result-content");
   if (!SEASON || !ROUND){
-    setPageTitle("Resultado da corrida");
-    document.getElementById("race-title").textContent = "Nenhuma corrida selecionada";
-    content.innerHTML = '<div class="state-msg error">Selecione uma corrida no <a href="calendario.html">calendário</a>.</div>';
+    setPageTitle(t("race_result_eyebrow"));
+    document.getElementById("race-title").textContent = t("no_race_selected");
+    content.innerHTML = `<div class="state-msg error">${t("select_race_prompt")}</div>`;
     return;
   }
   try{
@@ -31,15 +34,20 @@ async function load(){
     const race = data.MRData.RaceTable.Races[0];
     if (!race) throw new Error("corrida não encontrada");
 
-    document.title = `${race.raceName} · Resultado`;
+    document.title = t("page_title_race_result", { name: race.raceName });
     setPageTitle(race.raceName);
     document.getElementById("race-title").textContent = race.raceName;
-    document.getElementById("hero-sub").textContent =
-      `${race.Circuit.circuitName} · ${race.Circuit.Location.locality}, ${race.Circuit.Location.country} · rodada ${race.round}, temporada ${SEASON}`;
+    document.getElementById("hero-sub").textContent = t("race_meta_line", {
+      circuit: race.Circuit.circuitName,
+      locality: race.Circuit.Location.locality,
+      country: race.Circuit.Location.country,
+      round: race.round,
+      season: SEASON,
+    });
 
     renderResultsTable(content, race.Results || []);
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar o resultado (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_result", { err: err.message })}</div>`;
     console.error(err);
   }
 }

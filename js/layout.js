@@ -5,18 +5,29 @@
    este módulo.
    ========================================================= */
 
+import { t, renderLangToggle } from "./i18n.js";
+
 /* monta a barra do topo de uma página secundária: link de volta +
-   título da página (definido depois, quando os dados carregarem).
-   "extra" é HTML opcional anexado ao final (ex.: o seletor de
-   temporada do calendário). */
-export function renderSubpageHeader(el, { backHref = "index.html", backLabel = "Início", extra = "" } = {}){
+   título da página (definido depois, quando os dados carregarem) +
+   toggle PT/EN. "extra" é HTML opcional anexado antes do toggle (ex.:
+   o seletor de temporada do calendário). "backKey" é a chave de
+   tradução do link de volta (não o texto literal), pra ele poder ser
+   re-traduzido quando o idioma mudar. "onLangChange" roda depois de
+   trocar o idioma, pra a página re-renderizar seu conteúdo dinâmico. */
+export function renderSubpageHeader(el, { backHref = "index.html", backKey = "nav_home", extra = "", onLangChange } = {}){
   el.innerHTML = `
     <div class="topbar-inner">
-      <a class="back-link" href="${backHref}">← ${backLabel}</a>
+      <a class="back-link" id="back-link" href="${backHref}">← ${t(backKey)}</a>
       <span class="sep">·</span>
-      <span class="page-title" id="page-title">carregando…</span>
+      <span class="page-title" id="page-title">${t("state_loading")}</span>
       ${extra}
+      <span class="lang-toggle" id="lang-toggle"></span>
     </div>`;
+  renderLangToggle(document.getElementById("lang-toggle"), () => {
+    const back = document.getElementById("back-link");
+    if (back) back.textContent = `← ${t(backKey)}`;
+    onLangChange?.();
+  });
 }
 
 export function setPageTitle(text){

@@ -5,31 +5,33 @@
    ========================================================= */
 
 import { teamMeta, flagFor } from "./teams.js";
+import { t } from "./i18n.js";
 
-const STATUS_PT = {
-  "Finished": "Terminou",
-  "Retired": "Abandonou",
-  "Accident": "Acidente",
-  "Collision": "Colisão",
-  "Engine": "Motor",
-  "Gearbox": "Câmbio",
-  "Disqualified": "Desclassificado",
-  "Withdrew": "Retirou-se",
-  "Did not qualify": "Não classificou",
-  "Did not start": "Não largou",
-  "Spun off": "Rodou e saiu",
-  "Lapped": "Voltas de atraso",
+const STATUS_KEYS = {
+  "Finished": "status_finished",
+  "Retired": "status_retired",
+  "Accident": "status_accident",
+  "Collision": "status_collision",
+  "Engine": "status_engine",
+  "Gearbox": "status_gearbox",
+  "Disqualified": "status_disqualified",
+  "Withdrew": "status_withdrew",
+  "Did not qualify": "status_dnq",
+  "Did not start": "status_dns",
+  "Spun off": "status_spun_off",
+  "Lapped": "status_lapped",
 };
 
 /* traduz o status bruto da API ("Accident", "+1 Lap" etc.) pro
-   português; usado aqui e na estatística de confiabilidade */
+   idioma atual; usado aqui e na estatística de confiabilidade */
 export function statusText(status){
-  return STATUS_PT[status] || status;
+  const key = STATUS_KEYS[status];
+  return key ? t(key) : status;
 }
 
 export function renderResultsTable(container, results){
   if (!results.length){
-    container.innerHTML = '<div class="state-msg">Sem dados disponíveis pra esta etapa.</div>';
+    container.innerHTML = `<div class="state-msg">${t("no_results_data")}</div>`;
     return;
   }
 
@@ -59,8 +61,8 @@ export function renderResultsTable(container, results){
       <table>
         <thead>
           <tr>
-            <th>Pos</th><th>Piloto</th><th>Equipe</th>
-            <th class="num">Grid</th><th>Resultado</th><th class="num">Pontos</th>
+            <th>${t("standings_th_pos")}</th><th>${t("standings_th_driver")}</th><th>${t("standings_th_team")}</th>
+            <th class="num">Grid</th><th>${t("results_th_result")}</th><th class="num">${t("standings_th_points")}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -68,7 +70,7 @@ export function renderResultsTable(container, results){
     </div>
     ${fastestLapHolder ? `
       <div class="fastest-lap-callout">
-        <span class="fl-label">Volta mais rápida</span>
+        <span class="fl-label">${t("fastest_lap_label")}</span>
         <span class="fl-name">${flagFor(fastestLapHolder.Driver.nationality)} ${fastestLapHolder.Driver.givenName} ${fastestLapHolder.Driver.familyName}</span>
         <span class="fl-time mono">${fastestLapHolder.FastestLap.Time.time}</span>
       </div>` : ""}`;
