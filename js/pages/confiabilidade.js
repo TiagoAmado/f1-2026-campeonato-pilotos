@@ -20,6 +20,7 @@ import { API, fetchCached, loadPool, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from
 import { teamMeta } from "../teams.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
 import { statusText } from "../resultsTable.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 const NON_RETIREMENT_STATUS = new Set(["Disqualified", "Did not start", "Withdrew"]);
 const FINISHED_STATUS = /^(Finished|\+\d+ Laps?)$/;
@@ -29,9 +30,11 @@ let LATEST_SEASON = null;
 
 renderSubpageHeader(document.getElementById("topbar"), {
   backHref: SEASON ? `calendario.html?season=${SEASON}` : "calendario.html",
-  backLabel: "Calendário",
-  extra: `<span class="sep">·</span><b>TEMPORADA</b><select id="rel-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  backKey: "nav_calendar",
+  extra: `<span class="sep">·</span><b data-i18n="topbar_season">TEMPORADA</b><select id="rel-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 async function loadSeasonOptions(){
   const seasons = await fetchSeasons();
@@ -51,19 +54,19 @@ async function loadSeasonOptions(){
 
 async function load(){
   const content = document.getElementById("reliability-content");
-  content.innerHTML = '<div class="state-msg">Carregando…</div>';
+  content.innerHTML = `<div class="state-msg">${t("state_loading")}</div>`;
   try{
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
 
     const winnersData = await fetchCached(`${API}/${SEASON}/results/1.json?limit=40`, ttl);
     const races = winnersData.MRData.RaceTable.Races;
-    if (!races.length) throw new Error(`Nenhuma corrida concluída encontrada para ${SEASON}.`);
+    if (!races.length) throw new Error(t("error_no_completed_races", { season: SEASON }));
 
-    setPageTitle(`Confiabilidade · ${SEASON}`);
-    document.title = `Confiabilidade por equipe ${SEASON} · F1`;
+    setPageTitle(t("page_title_reliability", { season: SEASON }));
+    document.title = t("doc_title_reliability", { season: SEASON });
     document.getElementById("hero-sub").textContent =
-      `Abandonos e taxa de conclusão nas ${races.length} corridas já disputadas em ${SEASON}.`;
+      t("reliability_hero_sub", { count: races.length, season: SEASON });
 
     const resultsByRound = await loadPool(races.map(r => r.round), async (round) => {
       const data = await fetchCached(`${API}/${SEASON}/${round}/results.json?limit=40`, ttl);
@@ -115,15 +118,15 @@ async function load(){
         <table>
           <thead>
             <tr>
-              <th>Equipe</th><th class="num">Entradas</th><th class="num">Abandonos</th>
-              <th class="num">Conclusão</th><th>Principais motivos</th>
+              <th>${t("standings_th_team")}</th><th class="num">${t("th_entries")}</th><th class="num">${t("th_retirements")}</th>
+              <th class="num">${t("th_completion")}</th><th>${t("th_main_reasons")}</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar a confiabilidade (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_reliability", { err: err.message })}</div>`;
     console.error(err);
   }
 }

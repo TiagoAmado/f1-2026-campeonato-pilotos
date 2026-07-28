@@ -7,15 +7,18 @@
 import { API, fetchCached, loadPool, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "../api.js";
 import { teamMeta, flagFor } from "../teams.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 let SEASON = pageParams().season;
 let LATEST_SEASON = null;
 
 renderSubpageHeader(document.getElementById("topbar"), {
   backHref: SEASON ? `calendario.html?season=${SEASON}` : "calendario.html",
-  backLabel: "Calendário",
-  extra: `<span class="sep">·</span><b>TEMPORADA</b><select id="fl-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  backKey: "nav_calendar",
+  extra: `<span class="sep">·</span><b data-i18n="topbar_season">TEMPORADA</b><select id="fl-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 /* "1:32.808" -> 92.808, pra poder ordenar os tempos */
 function timeToSeconds(t){
@@ -41,19 +44,19 @@ async function loadSeasonOptions(){
 
 async function load(){
   const content = document.getElementById("fastlaps-content");
-  content.innerHTML = '<div class="state-msg">Carregando voltas…</div>';
+  content.innerHTML = `<div class="state-msg">${t("loading_fastlaps")}</div>`;
   try{
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
 
     const winnersData = await fetchCached(`${API}/${SEASON}/results/1.json?limit=40`, ttl);
     const races = winnersData.MRData.RaceTable.Races;
-    if (!races.length) throw new Error(`Nenhuma corrida concluída encontrada para ${SEASON}.`);
+    if (!races.length) throw new Error(t("error_no_completed_races", { season: SEASON }));
 
-    setPageTitle(`Voltas mais rápidas · ${SEASON}`);
-    document.title = `Voltas mais rápidas ${SEASON} · F1`;
+    setPageTitle(t("page_title_fastlaps", { season: SEASON }));
+    document.title = t("doc_title_fastlaps", { season: SEASON });
     document.getElementById("hero-sub").textContent =
-      `A volta mais rápida de cada uma das ${races.length} corridas já disputadas em ${SEASON}, ordenadas por tempo.`;
+      t("fastlaps_hero_sub", { count: races.length, season: SEASON });
 
     const fastestByRound = await loadPool(races.map(r => r.round), async (round) => {
       const data = await fetchCached(`${API}/${SEASON}/${round}/results.json?limit=40`, ttl);
@@ -72,7 +75,7 @@ async function load(){
 
     const entries = fastestByRound.filter(Boolean);
     if (!entries.length){
-      content.innerHTML = `<div class="state-msg">Sem dados de volta mais rápida pra ${SEASON} (a Jolpica só tem esse dado a partir de 2004).</div>`;
+      content.innerHTML = `<div class="state-msg">${t("no_fastlap_data", { season: SEASON })}</div>`;
       return;
     }
 
@@ -97,13 +100,13 @@ async function load(){
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>Pos</th><th>Piloto</th><th>Equipe</th><th>Corrida</th><th class="num">Volta</th><th class="num">Tempo</th></tr>
+            <tr><th>${t("standings_th_pos")}</th><th>${t("standings_th_driver")}</th><th>${t("standings_th_team")}</th><th>${t("th_race")}</th><th class="num">${t("th_lap")}</th><th class="num">${t("th_time")}</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar as voltas rápidas (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_fastlaps", { err: err.message })}</div>`;
     console.error(err);
   }
 }

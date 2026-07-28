@@ -180,6 +180,39 @@ const DICT = {
     error_load_comparison: "Não foi possível carregar a comparação ({err}).",
     h2h_label: "confrontos diretos<br>({rounds} corridas em comum)",
     page_title_compare: "{a} vs {b} · Comparador",
+
+    // rankings da temporada (paradas / voltas rápidas / confiabilidade)
+    ranking_eyebrow: "Ranking da temporada",
+    error_no_completed_races: "Nenhuma corrida concluída encontrada para {season}.",
+    th_lap: "Volta",
+    th_time: "Tempo",
+    th_entries: "Entradas",
+    th_retirements: "Abandonos",
+    th_completion: "Conclusão",
+    th_main_reasons: "Principais motivos",
+
+    pitstops_title: "Paradas mais rápidas.",
+    loading_pitstops: "Carregando paradas…",
+    pitstops_hero_sub: "As paradas nos boxes mais rápidas entre as {count} corridas já disputadas em {season}.",
+    no_pitstop_data: "Sem dados de paradas nos boxes pra {season} (a Jolpica só tem esse dado a partir de ~2012).",
+    error_load_pitstops: "Não foi possível carregar as paradas ({err}).",
+    page_title_pitstops: "Paradas mais rápidas · {season}",
+    doc_title_pitstops: "Paradas mais rápidas {season} · F1",
+    th_duration: "Duração",
+
+    fastlaps_title: "Voltas mais rápidas.",
+    loading_fastlaps: "Carregando voltas…",
+    fastlaps_hero_sub: "A volta mais rápida de cada uma das {count} corridas já disputadas em {season}, ordenadas por tempo.",
+    no_fastlap_data: "Sem dados de volta mais rápida pra {season} (a Jolpica só tem esse dado a partir de 2004).",
+    error_load_fastlaps: "Não foi possível carregar as voltas rápidas ({err}).",
+    page_title_fastlaps: "Voltas mais rápidas · {season}",
+    doc_title_fastlaps: "Voltas mais rápidas {season} · F1",
+
+    reliability_title: "Confiabilidade por equipe.",
+    reliability_hero_sub: "Abandonos e taxa de conclusão nas {count} corridas já disputadas em {season}.",
+    error_load_reliability: "Não foi possível carregar a confiabilidade ({err}).",
+    page_title_reliability: "Confiabilidade · {season}",
+    doc_title_reliability: "Confiabilidade por equipe {season} · F1",
   },
 
   en: {
@@ -342,6 +375,39 @@ const DICT = {
     error_load_comparison: "Could not load the comparison ({err}).",
     h2h_label: "head-to-head<br>({rounds} races in common)",
     page_title_compare: "{a} vs {b} · Compare",
+
+    // rankings da temporada (paradas / voltas rápidas / confiabilidade)
+    ranking_eyebrow: "Season ranking",
+    error_no_completed_races: "No completed races found for {season}.",
+    th_lap: "Lap",
+    th_time: "Time",
+    th_entries: "Entries",
+    th_retirements: "Retirements",
+    th_completion: "Completion",
+    th_main_reasons: "Main reasons",
+
+    pitstops_title: "Fastest pit stops.",
+    loading_pitstops: "Loading pit stops…",
+    pitstops_hero_sub: "The fastest pit stops among the {count} races already held in {season}.",
+    no_pitstop_data: "No pit stop data for {season} (Jolpica only has this data from ~2012 onward).",
+    error_load_pitstops: "Could not load the pit stops ({err}).",
+    page_title_pitstops: "Fastest pit stops · {season}",
+    doc_title_pitstops: "Fastest pit stops {season} · F1",
+    th_duration: "Duration",
+
+    fastlaps_title: "Fastest laps.",
+    loading_fastlaps: "Loading laps…",
+    fastlaps_hero_sub: "The fastest lap of each of the {count} races already held in {season}, sorted by time.",
+    no_fastlap_data: "No fastest lap data for {season} (Jolpica only has this data from 2004 onward).",
+    error_load_fastlaps: "Could not load the fastest laps ({err}).",
+    page_title_fastlaps: "Fastest laps · {season}",
+    doc_title_fastlaps: "Fastest laps {season} · F1",
+
+    reliability_title: "Reliability by team.",
+    reliability_hero_sub: "Retirements and completion rate across the {count} races already held in {season}.",
+    error_load_reliability: "Could not load the reliability data ({err}).",
+    page_title_reliability: "Reliability · {season}",
+    doc_title_reliability: "Reliability by team {season} · F1",
   },
 };
 

@@ -124,7 +124,7 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 **Dependência**: Fase 0 completa (módulos compartilhados e nav). Fase 1 opcional mas recomendável antes, senão as páginas novas nascem no visual antigo e precisam ser re-visitadas depois.
 
-**Status**: em andamento — dividida em 3 PRs menores em vez de uma só, pelo tamanho:
+**Status**: ✅ concluída — dividida em 3 PRs menores em vez de uma só, pelo tamanho:
 - [x] **2a** — `js/layout.js` (cabeçalho compartilhado das páginas secundárias, adiado da Fase 0), link "Calendário completo" no topbar da home, `fetchSeasons()` centralizado em `js/api.js` (reaproveitado pela home e pelo calendário), e `calendario.html` completo (corridas passadas/futuras, contagem regressiva pra próxima etapa, badge de sprint). O link "Ver resultado" de cada corrida pra `corrida.html` fica pra 2b, quando essa página existir.
 - [x] **2b** — `corrida.html`, `treino.html`, `sprint.html` (resultado por corrida/treino/sprint). `js/resultsTable.js` compartilha a tabela entre corrida e sprint (mesmo formato de dado). Tira de vencedores da home e cada linha passada do calendário agora linkam pras páginas novas. Reaproveitou `.table-scroll` (rolagem lateral) existente pro mobile, em vez de criar um segundo layout em cards — mantém consistência com o resto do site.
 - [x] **2c** — `piloto.html`, `equipe.html` (perfis, reaproveitando `js/chart.js`). Pontos, vitórias, pódios/posição e evolução por rodada, mais poles (piloto) e a contribuição de cada piloto (equipe). Nomes de piloto/equipe na home (pódio, tabela, construtores) agora linkam pros perfis. Novo componente `.stat-grid`/`.stat-card` reaproveitado pelas duas páginas.
@@ -143,11 +143,11 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 - [x] Ranking de voltas mais rápidas da temporada (`voltas-rapidas.html?season=`) — uma entrada por corrida (quem cravou a mais rápida), a partir do mesmo `/{season}/{round}/results.json` já usado em `corrida.html`. Só tem dado a partir de 2004.
 - [x] Estatística de confiabilidade por equipe (`confiabilidade.html?season=`) — abandonos, taxa de conclusão e principais motivos, a partir do mesmo `/{season}/{round}/results.json` já usado em `voltas-rapidas.html`. Escopo ajustado: **só por equipe, não por motor** — a Jolpica não expõe fabricante de motor separado da equipe (documentado no topo do arquivo `js/pages/confiabilidade.js`).
 - [x] Cartão de compartilhamento estilo "pôster vintage" do pódio atual — botão "Baixar cartão do pódio" na home, gera um PNG (1080×1080) via `<canvas>` em `js/shareCard.js`: fundo com gradiente + faixa quadriculada, eyebrow/título na tipografia do site, um roundel por piloto na cor da equipe. Lê as cores direto das custom properties do CSS (`getComputedStyle`), então acompanha a paleta automaticamente se ela mudar. Sem integração com Web Share API — só download, pra depois compartilhar manualmente onde quiser.
-- [ ] Alternância de idioma PT/EN — escopo bem maior que os outros itens (toca toda string do site, todas as páginas); tratar como esforço dedicado à parte, não bundlar com os itens menores. **Único item restante da Fase 3**, dividido em sub-etapas:
+- [x] Alternância de idioma PT/EN — escopo bem maior que os outros itens (toca toda string do site, todas as páginas); tratado como esforço dedicado à parte, em sub-etapas:
   - [x] **3e** — `js/i18n.js` (dicionário PT/EN, `t()`, persistência em `localStorage`, botão de alternância), `js/format.js` ganhou parâmetro de idioma nas datas, e a home (`index.html`/`script.js`) 100% bilíngue, incluindo o cartão de compartilhamento (`js/shareCard.js`). Trocar de idioma re-renderiza a partir do estado já carregado, sem refazer chamadas à API.
   - [x] **3f** — `js/layout.js` (cabeçalho compartilhado) ganhou o toggle PT/EN, com `backKey` (chave de tradução) no lugar de texto literal pro link de volta se re-traduzir sozinho. `calendario.html`, `corrida.html`, `treino.html`, `sprint.html` e `js/resultsTable.js` (status da API + cabeçalhos de tabela) 100% bilíngues. Cada página guarda seu próprio `load()` como função de re-render: o callback do toggle só chama `load()` de novo, que bate no cache do `localStorage` (sem chamada nova à API) e redesenha tudo já traduzido.
   - [x] **3g** — `piloto.html`, `equipe.html`, `comparador.html` 100% bilíngues, incluindo o rótulo do eixo Y do gráfico (`js/chart.js` reaproveitado, sem mudança nele — só o `valueLabel` passado por quem chama) e os textos de confronto direto do comparador. Corrigido de quebra: `js/pages/comparador.js` nunca chamava `setPageTitle()`, então o título pequeno do topbar ficava preso no idioma de quando a página carregou pela primeira vez, mesmo depois de trocar de idioma — passou a chamar `setPageTitle()` com o confronto (`"Norris vs Verstappen"`) assim que os dados carregam.
-  - [ ] **3h** — `paradas.html`, `voltas-rapidas.html`, `confiabilidade.html`
+  - [x] **3h** — `paradas.html`, `voltas-rapidas.html`, `confiabilidade.html` 100% bilíngues, incluindo os motivos de abandono agrupados (reaproveitando `statusText()` de `js/resultsTable.js`, já i18n-aware desde a 3f). **Com isso, a alternância PT/EN cobre 100% das páginas do site.**
 
 > **Nota de arquitetura i18n**: o toggle PT/EN foi adicionado ao `js/layout.js` na etapa 3f — a partir de agora toda página que usa `renderSubpageHeader` ganha o botão automaticamente. Cuidado ao marcar `data-i18n` em elementos cujo texto é sobrescrito por `textContent` depois (não por `innerHTML` completo): como `applyStaticTranslations()` roda de novo a cada troca de idioma, ela reaplicaria o texto "carregando" por cima do conteúdo já carregado. Nesses casos (ex.: `hero-sub`, `race-title`) o texto é sempre setado via `t()` direto no JS, nunca via `data-i18n` — ver `js/pages/corrida.js`, `treino.js`, `sprint.js`.
 
@@ -157,7 +157,7 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 
 **Dependência**: Fases 0-2 (reaproveita páginas e dados já buscados).
 
-**Status**: em andamento, dividida em PRs menores como as fases anteriores — feito até aqui: calculadora de título + comparador (3a).
+**Status**: ✅ concluída, dividida em PRs menores como as fases anteriores (3a calculadora de título + comparador, 3b paradas + voltas rápidas, 3c confiabilidade, 3d cartão de compartilhamento, 3e-3h alternância PT/EN).
 
 ---
 
@@ -177,7 +177,7 @@ Levantado diretamente do código em `index.html`, `style.css` e `script.js` (nã
 ## 8. Checklist de acompanhamento
 
 - [x] **Fase 0** — módulos `js/api.js`, `js/teams.js`, `js/format.js`, `js/chart.js`; `script.js` como ES module; cache em `localStorage` com TTL diferenciado por temporada. `js/layout.js`/nav ficou pra Fase 2, quando existir mais de uma página pra navegar entre (evita módulo sem consumidor nesta fase)
-- [ ] **Fase 1** — tokens de cor e tipografia novos; tabela de classificação redesenhada como prancheta vintage; textura e divisor aplicados com moderação
-- [ ] **Fase 2** — `calendario.html`, `corrida.html`, `treino.html`, `sprint.html`, `piloto.html`, `equipe.html`, com links a partir da home
-- [ ] **Fase 3** — paradas, comparador, voltas rápidas, calculadora de título, confiabilidade, PT/EN, cartão de compartilhamento
+- [x] **Fase 1** — tokens de cor e tipografia novos; tabela de classificação redesenhada como prancheta vintage; textura e divisor aplicados com moderação
+- [x] **Fase 2** — `calendario.html`, `corrida.html`, `treino.html`, `sprint.html`, `piloto.html`, `equipe.html`, com links a partir da home
+- [x] **Fase 3** — paradas, comparador, voltas rápidas, calculadora de título, confiabilidade, PT/EN, cartão de compartilhamento
 - [ ] **Fase 4** — mapa de circuito, linha do tempo histórica, tema claro, busca global, acessibilidade de cor, resumo automático
