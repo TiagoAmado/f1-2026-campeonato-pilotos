@@ -270,6 +270,13 @@ tbody td{padding:11px 14px;border-bottom:1px solid var(--border);}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover{background:var(--bg-panel-2);}
 td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;}
+/* linha da tabela de classificação é clicável — escolhe o piloto usado
+   como referência da coluna "Diferença" (padrão: líder do campeonato) */
+.std-row{cursor:pointer;}
+.std-row.gap-ref{background:var(--amber-soft);}
+.std-row.gap-ref:hover{background:var(--amber-soft);}
+.gap-ref .gap-cell{color:var(--burnt-amber);font-weight:700;}
+.table-hint{color:var(--text-3);font-size:12px;margin:10px 2px 0;}
 .drow{display:flex;align-items:center;gap:10px;}
 /* roundel: numero de posicao como selo circular, no lugar do numero solto */
 .num-badge{
