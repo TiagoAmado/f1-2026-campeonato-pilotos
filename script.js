@@ -208,6 +208,8 @@ function renderHeaderTexts(){
 
   document.title = t("page_title_home", { season: SEASON });
   document.getElementById("eyebrow-season").textContent = t("hero_eyebrow", { season: SEASON });
+  document.getElementById("nav-calendar-full").href = `calendario.html?season=${SEASON}`;
+  document.getElementById("nav-compare").href = `comparador.html?season=${SEASON}`;
 
   document.getElementById("live-dot").classList.remove("err");
   document.getElementById("tb-round").textContent = t("topbar_round", { completed: TOTAL_COMPLETED, total: TOTAL_ROUNDS });
