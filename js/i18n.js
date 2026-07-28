@@ -90,6 +90,65 @@ const DICT = {
 
     // estados genéricos
     state_error_load: "Não foi possível carregar os dados ao vivo agora ({err}). Tente recarregar a página em alguns instantes.",
+
+    // subpáginas — cabeçalho e estados compartilhados
+    state_loading: "Carregando…",
+    no_race_selected: "Nenhuma corrida selecionada",
+    select_race_prompt: 'Selecione uma corrida no <a href="calendario.html">calendário</a>.',
+    round_season_label: "Rodada {round} · {season}",
+    race_meta_line: "{circuit} · {locality}, {country} · rodada {round}, temporada {season}",
+
+    // calendário
+    calendar_eyebrow: "Calendário completo",
+    calendar_title_l1: "Todas as corridas",
+    calendar_title_l2: "da temporada.",
+    loading_calendar: "Carregando calendário…",
+    loading_races: "Carregando corridas…",
+    calendar_hero_sub: "{count} corridas na temporada {season}.",
+    page_title_calendar: "Calendário · {season}",
+    countdown_today: "É hoje!",
+    countdown_tomorrow: "Amanhã",
+    countdown_days: "Daqui a {n} dias",
+    link_race: "Corrida →",
+    link_qualifying: "Treino →",
+    link_sprint_result: "Sprint →",
+    link_pitstops: "Paradas mais rápidas →",
+    link_fastest_laps: "Voltas mais rápidas →",
+    link_reliability: "Confiabilidade por equipe →",
+    error_load_calendar: "Não foi possível carregar o calendário agora ({err}).",
+    error_no_races_season: "Nenhuma corrida encontrada para {season}.",
+
+    // resultado da corrida / sprint
+    race_result_eyebrow: "Resultado da corrida",
+    sprint_result_eyebrow: "Resultado da sprint",
+    loading_result: "Carregando resultado…",
+    page_title_race_result: "{name} · Resultado",
+    error_load_result: "Não foi possível carregar o resultado ({err}).",
+    no_sprint_data: "Não houve sprint nesta etapa.",
+
+    // treino classificatório
+    qualifying_eyebrow: "Treino classificatório",
+    loading_qualifying: "Carregando treino…",
+    page_title_qualifying: "{name} · Treino",
+    no_qualifying_data: "Sem dados de treino classificatório pra esta corrida.",
+    error_load_qualifying: "Não foi possível carregar o treino ({err}).",
+
+    // tabela de resultados (corrida/sprint)
+    results_th_result: "Resultado",
+    fastest_lap_label: "Volta mais rápida",
+    no_results_data: "Sem dados disponíveis pra esta etapa.",
+    status_finished: "Terminou",
+    status_retired: "Abandonou",
+    status_accident: "Acidente",
+    status_collision: "Colisão",
+    status_engine: "Motor",
+    status_gearbox: "Câmbio",
+    status_disqualified: "Desclassificado",
+    status_withdrew: "Retirou-se",
+    status_dnq: "Não classificou",
+    status_dns: "Não largou",
+    status_spun_off: "Rodou e saiu",
+    status_lapped: "Voltas de atraso",
   },
 
   en: {
@@ -162,6 +221,65 @@ const DICT = {
     footer_credit: "Official FIA data via Jolpica F1 API",
 
     state_error_load: "Could not load live data right now ({err}). Try reloading the page in a moment.",
+
+    // subpáginas — cabeçalho e estados compartilhados
+    state_loading: "Loading…",
+    no_race_selected: "No race selected",
+    select_race_prompt: 'Select a race in the <a href="calendario.html">calendar</a>.',
+    round_season_label: "Round {round} · {season}",
+    race_meta_line: "{circuit} · {locality}, {country} · round {round}, {season} season",
+
+    // calendário
+    calendar_eyebrow: "Full calendar",
+    calendar_title_l1: "All the races",
+    calendar_title_l2: "of the season.",
+    loading_calendar: "Loading calendar…",
+    loading_races: "Loading races…",
+    calendar_hero_sub: "{count} races in the {season} season.",
+    page_title_calendar: "Calendar · {season}",
+    countdown_today: "Today!",
+    countdown_tomorrow: "Tomorrow",
+    countdown_days: "In {n} days",
+    link_race: "Race →",
+    link_qualifying: "Qualifying →",
+    link_sprint_result: "Sprint →",
+    link_pitstops: "Fastest pit stops →",
+    link_fastest_laps: "Fastest laps →",
+    link_reliability: "Reliability by team →",
+    error_load_calendar: "Could not load the calendar right now ({err}).",
+    error_no_races_season: "No races found for {season}.",
+
+    // resultado da corrida / sprint
+    race_result_eyebrow: "Race result",
+    sprint_result_eyebrow: "Sprint result",
+    loading_result: "Loading result…",
+    page_title_race_result: "{name} · Result",
+    error_load_result: "Could not load the result ({err}).",
+    no_sprint_data: "There was no sprint at this round.",
+
+    // treino classificatório
+    qualifying_eyebrow: "Qualifying",
+    loading_qualifying: "Loading qualifying…",
+    page_title_qualifying: "{name} · Qualifying",
+    no_qualifying_data: "No qualifying data available for this race.",
+    error_load_qualifying: "Could not load qualifying ({err}).",
+
+    // tabela de resultados (corrida/sprint)
+    results_th_result: "Result",
+    fastest_lap_label: "Fastest lap",
+    no_results_data: "No data available for this round.",
+    status_finished: "Finished",
+    status_retired: "Retired",
+    status_accident: "Accident",
+    status_collision: "Collision",
+    status_engine: "Engine",
+    status_gearbox: "Gearbox",
+    status_disqualified: "Disqualified",
+    status_withdrew: "Withdrew",
+    status_dnq: "Did not qualify",
+    status_dns: "Did not start",
+    status_spun_off: "Spun off",
+    status_lapped: "Lapped",
   },
 };
 
