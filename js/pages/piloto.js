@@ -9,14 +9,17 @@ import { fmtDate } from "../format.js";
 import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
 import { createLineChart } from "../chart.js";
 import { fetchDriverSeasonStats } from "../driverStats.js";
+import { t, getLang, applyStaticTranslations } from "../i18n.js";
 
 const DRIVER_ID = pageParams().id;
 let SEASON = pageParams().season;
 let LATEST_SEASON = null;
 
 renderSubpageHeader(document.getElementById("topbar"), {
-  extra: `<span class="sep">·</span><b>TEMPORADA</b><select id="driver-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  extra: `<span class="sep">·</span><b data-i18n="topbar_season">TEMPORADA</b><select id="driver-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  onLangChange: load,
 });
+applyStaticTranslations();
 
 async function loadSeasonOptions(){
   const seasons = await fetchSeasons();
@@ -37,24 +40,25 @@ async function loadSeasonOptions(){
 async function load(){
   const content = document.getElementById("driver-content");
   if (!DRIVER_ID){
-    content.innerHTML = '<div class="state-msg error">Piloto não especificado.</div>';
+    content.innerHTML = `<div class="state-msg error">${t("driver_not_specified")}</div>`;
     return;
   }
-  content.innerHTML = '<div class="state-msg">Carregando perfil…</div>';
+  content.innerHTML = `<div class="state-msg">${t("loading_profile")}</div>`;
   try{
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
 
     const stats = await fetchDriverSeasonStats(DRIVER_ID, SEASON, ttl);
     if (!stats){
-      setPageTitle("Perfil de piloto");
-      content.innerHTML = `<div class="state-msg">Sem dados pra este piloto na temporada ${SEASON}.</div>`;
+      setPageTitle(t("driver_profile_eyebrow"));
+      content.innerHTML = `<div class="state-msg">${t("no_driver_season_data", { season: SEASON })}</div>`;
       return;
     }
     const { driver, team, races, ptsEvolution, totalPts, wins, podiums, poles, byRound } = stats;
     const lastResult = races[races.length - 1].Results[0];
+    const lang = getLang();
 
-    document.title = `${driver.givenName} ${driver.familyName} · Perfil`;
+    document.title = t("page_title_driver", { name: `${driver.givenName} ${driver.familyName}` });
     setPageTitle(`${driver.givenName} ${driver.familyName}`);
 
     const rows = races.map(r => {
@@ -71,11 +75,16 @@ async function load(){
 
     content.innerHTML = `
       <h1>${flagFor(driver.nationality)} ${driver.givenName} ${driver.familyName}</h1>
-      <p class="sub"><a href="equipe.html?id=${lastResult.Constructor.constructorId}&season=${SEASON}">${team.name}</a> · #${lastResult.number} · ${driver.nationality} · temporada ${SEASON}</p>
+      <p class="sub">${t("driver_meta_line", {
+        team: `<a href="equipe.html?id=${lastResult.Constructor.constructorId}&season=${SEASON}">${team.name}</a>`,
+        number: lastResult.number,
+        nationality: driver.nationality,
+        season: SEASON,
+      })}</p>
       <div class="stat-grid">
-        <div class="stat-card"><span class="stat-value">${totalPts}</span><span class="stat-label">Pontos</span></div>
-        <div class="stat-card"><span class="stat-value">${wins}</span><span class="stat-label">Vitórias</span></div>
-        <div class="stat-card"><span class="stat-value">${podiums}</span><span class="stat-label">Pódios</span></div>
+        <div class="stat-card"><span class="stat-value">${totalPts}</span><span class="stat-label">${t("standings_th_points")}</span></div>
+        <div class="stat-card"><span class="stat-value">${wins}</span><span class="stat-label">${t("standings_th_wins")}</span></div>
+        <div class="stat-card"><span class="stat-value">${podiums}</span><span class="stat-label">${t("stat_podiums")}</span></div>
         <div class="stat-card"><span class="stat-value">${poles}</span><span class="stat-label">Poles</span></div>
       </div>
       <div class="chart-panel">
@@ -90,7 +99,7 @@ async function load(){
       </div>
       <div class="table-scroll" style="margin-top:20px;">
         <table>
-          <thead><tr><th>Rodada</th><th>Corrida</th><th class="num">Grid</th><th>Result.</th><th class="num">Pontos</th></tr></thead>
+          <thead><tr><th>${t("th_round")}</th><th>${t("th_race")}</th><th class="num">Grid</th><th>Result.</th><th class="num">${t("standings_th_points")}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       </div>`;
@@ -99,8 +108,8 @@ async function load(){
       svg: document.getElementById("pilot-chart"),
       tooltip: document.getElementById("pilot-tooltip"),
       xLabels: races.map(r => codeFor(r.Circuit.circuitId, r.Circuit.Location.locality)),
-      xLabelsFull: races.map(r => `${r.raceName} (${fmtDate(r.date)})`),
-      valueLabel: "pts acumulados",
+      xLabelsFull: races.map(r => `${r.raceName} (${fmtDate(r.date, lang)})`),
+      valueLabel: t("chart_pts_label"),
     });
     chart.setSeries([{
       id: DRIVER_ID,
@@ -112,7 +121,7 @@ async function load(){
     chart.setVisible(new Set([DRIVER_ID]));
     chart.render();
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar o perfil (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_profile", { err: err.message })}</div>`;
     console.error(err);
   }
 }

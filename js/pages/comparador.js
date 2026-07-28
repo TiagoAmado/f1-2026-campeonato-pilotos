@@ -6,8 +6,9 @@
 
 import { API, fetchCached, fetchSeasons, TTL_LIVE, TTL_HISTORIC } from "../api.js";
 import { flagFor } from "../teams.js";
-import { renderSubpageHeader, pageParams } from "../layout.js";
+import { renderSubpageHeader, setPageTitle, pageParams } from "../layout.js";
 import { fetchDriverSeasonStats } from "../driverStats.js";
+import { t, applyStaticTranslations } from "../i18n.js";
 
 let SEASON = pageParams().season;
 let LATEST_SEASON = null;
@@ -15,8 +16,10 @@ let DRIVER_A = pageParams().a;
 let DRIVER_B = pageParams().b;
 
 renderSubpageHeader(document.getElementById("topbar"), {
-  extra: `<span class="sep">·</span><b>TEMPORADA</b><select id="h2h-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  extra: `<span class="sep">·</span><b data-i18n="topbar_season">TEMPORADA</b><select id="h2h-season-select" class="season-select" aria-label="Selecionar temporada"></select>`,
+  onLangChange: loadComparison,
 });
+applyStaticTranslations();
 
 /* conta em quantas rodadas cada piloto terminou na frente do outro —
    só considera rodadas em que os dois participaram */
@@ -47,9 +50,9 @@ function sideHtml(stats){
       <h2>${flagFor(stats.driver.nationality)} ${stats.driver.givenName} ${stats.driver.familyName}</h2>
       <p class="team">${stats.team.name}</p>
       <div class="h2h-stats">
-        <div><span class="stat-value">${stats.totalPts}</span><span class="stat-label">Pontos</span></div>
-        <div><span class="stat-value">${stats.wins}</span><span class="stat-label">Vitórias</span></div>
-        <div><span class="stat-value">${stats.podiums}</span><span class="stat-label">Pódios</span></div>
+        <div><span class="stat-value">${stats.totalPts}</span><span class="stat-label">${t("standings_th_points")}</span></div>
+        <div><span class="stat-value">${stats.wins}</span><span class="stat-label">${t("standings_th_wins")}</span></div>
+        <div><span class="stat-value">${stats.podiums}</span><span class="stat-label">${t("stat_podiums")}</span></div>
         <div><span class="stat-value">${stats.poles}</span><span class="stat-label">Poles</span></div>
       </div>
     </div>`;
@@ -100,10 +103,11 @@ async function loadDriverOptions(){
 async function loadComparison(){
   const content = document.getElementById("h2h-content");
   if (!DRIVER_A || !DRIVER_B){
-    content.innerHTML = '<div class="state-msg error">Sem pilotos suficientes nessa temporada pra comparar.</div>';
+    setPageTitle(t("compare_eyebrow"));
+    content.innerHTML = `<div class="state-msg error">${t("error_not_enough_drivers")}</div>`;
     return;
   }
-  content.innerHTML = '<div class="state-msg">Carregando comparação…</div>';
+  content.innerHTML = `<div class="state-msg">${t("loading_comparison")}</div>`;
   try{
     const isLive = LATEST_SEASON == null || SEASON === LATEST_SEASON;
     const ttl = isLive ? TTL_LIVE : TTL_HISTORIC;
@@ -114,28 +118,29 @@ async function loadComparison(){
     ]);
 
     if (!statsA || !statsB){
-      content.innerHTML = '<div class="state-msg">Um dos pilotos não correu nessa temporada.</div>';
+      content.innerHTML = `<div class="state-msg">${t("error_driver_not_raced")}</div>`;
       return;
     }
     if (DRIVER_A === DRIVER_B){
-      content.innerHTML = '<div class="state-msg error">Escolha dois pilotos diferentes.</div>';
+      content.innerHTML = `<div class="state-msg error">${t("error_choose_different_drivers")}</div>`;
       return;
     }
 
     const h2h = headToHead(statsA, statsB);
-    document.title = `${statsA.driver.familyName} vs ${statsB.driver.familyName} · Comparador`;
+    document.title = t("page_title_compare", { a: statsA.driver.familyName, b: statsB.driver.familyName });
+    setPageTitle(`${statsA.driver.familyName} vs ${statsB.driver.familyName}`);
 
     content.innerHTML = `
       <div class="h2h-grid">
         ${sideHtml(statsA)}
         <div class="h2h-vs">
           <div class="h2h-score">${h2h.aAhead} × ${h2h.bAhead}</div>
-          <div class="h2h-label">confrontos diretos<br>(${h2h.rounds} corridas em comum)</div>
+          <div class="h2h-label">${t("h2h_label", { rounds: h2h.rounds })}</div>
         </div>
         ${sideHtml(statsB)}
       </div>`;
   } catch (err){
-    content.innerHTML = `<div class="state-msg error">Não foi possível carregar a comparação (${err.message}).</div>`;
+    content.innerHTML = `<div class="state-msg error">${t("error_load_comparison", { err: err.message })}</div>`;
     console.error(err);
   }
 }
