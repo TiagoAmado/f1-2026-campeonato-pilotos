@@ -65,6 +65,8 @@ const DICT = {
     standings_th_points: "Pontos",
     standings_th_wins: "Vitórias",
     standings_th_gap: "Diferença",
+    standings_gap_hint: "Clique num piloto pra comparar a diferença de pontos com ele.",
+    standings_gap_ref: "Diferença de pontos em relação a {name}. Clique de novo pra voltar à referência do líder.",
 
     // home — calculadora de título
     title_math_season_over_champion: "🏆 Temporada encerrada — {name} é o campeão.",
@@ -265,6 +267,8 @@ const DICT = {
     standings_th_points: "Points",
     standings_th_wins: "Wins",
     standings_th_gap: "Gap",
+    standings_gap_hint: "Click a driver to compare the points gap to them.",
+    standings_gap_ref: "Points gap relative to {name}. Click again to go back to the leader as reference.",
 
     title_math_season_over_champion: "🏆 Season over — {name} is the champion.",
     title_math_season_over: "Season over.",

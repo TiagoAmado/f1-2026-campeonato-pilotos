@@ -49,6 +49,7 @@ let leaderPts = 0;
 let visible = new Set();
 const SECOND_DRIVER = new Set();
 let chart = null;
+let gapRef = null; // id do piloto usado como referência da coluna "Diferença" — null = líder
 
 /* descrição completa de cada corrida pro eixo X do gráfico e pra tira
    de vencedores — recalculada a cada render porque o formato de data
@@ -359,12 +360,17 @@ function updateChart(){
    ========================================================= */
 function renderStandings(){
   const body = document.getElementById("standings-body");
+  const refDriver = (gapRef && DRIVERS.find(d => d.id === gapRef)) || DRIVERS[0];
+  const refPts = refDriver.pts[refDriver.pts.length - 1];
+
   body.innerHTML = DRIVERS.map((d,i)=>{
     const team = TEAMS[d.team];
     const last = d.pts[d.pts.length-1];
-    const gap = i===0 ? "—" : "-" + (leaderPts - last);
+    const gapVal = last - refPts;
+    const gap = gapVal === 0 ? "—" : (gapVal > 0 ? `+${gapVal}` : `${gapVal}`);
+    const isRef = d.id === refDriver.id;
     return `
-      <tr style="--c:${team.color}">
+      <tr style="--c:${team.color}" class="std-row${isRef ? " gap-ref" : ""}" data-id="${d.id}">
         <td class="mono">${i+1}</td>
         <td>
           <div class="drow">
@@ -377,9 +383,22 @@ function renderStandings(){
         <td class="dteam"><a href="equipe.html?id=${d.team}&season=${SEASON}">${team.name}</a></td>
         <td class="num mono">${last}</td>
         <td class="num">${d.wins ? `<span class="wins-badge">${d.wins}</span>` : `<span class="dteam">0</span>`}</td>
-        <td class="num mono dteam">${gap}</td>
+        <td class="num mono ${isRef ? "" : "dteam"} gap-cell">${gap}</td>
       </tr>`;
   }).join("");
+
+  const hint = document.getElementById("standings-hint");
+  if (hint) hint.textContent = gapRef ? t("standings_gap_ref", { name: refDriver.name }) : t("standings_gap_hint");
+
+  body.querySelectorAll(".std-row").forEach(row => {
+    row.addEventListener("click", (e) => {
+      // não intercepta clique nos links de piloto/equipe dentro da linha
+      if (e.target.closest("a")) return;
+      const id = row.dataset.id;
+      gapRef = gapRef === id ? null : id;
+      renderStandings();
+    });
+  });
 }
 
 /* =========================================================
@@ -500,6 +519,7 @@ function resetForNewSeason(){
   chart = null;
   SECOND_DRIVER.clear();
   visible = new Set();
+  gapRef = null;
 
   document.getElementById("podium").innerHTML = `<div class="state-msg">${t("podium_loading")}</div>`;
   document.getElementById("chip-groups").innerHTML = "";
