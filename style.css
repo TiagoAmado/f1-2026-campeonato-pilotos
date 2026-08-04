@@ -352,8 +352,10 @@ td.num,th.num{text-align:right;font-family:'JetBrains Mono',monospace;font-varia
 .cal-links a{color:var(--text-2);font-size:12px;text-decoration:none;white-space:nowrap;}
 .cal-links a:hover{color:var(--burnt-amber);}
 @media (max-width:640px){
-  .cal-row{flex-wrap:wrap;}
+  .cal-row{flex-direction:column;align-items:flex-start;gap:8px;}
+  .cal-round{width:auto;}
   .cal-date{text-align:left;}
+  .cal-links{flex-wrap:wrap;}
 }
 
 /* ---- páginas de resultado (corrida, treino, sprint): volta mais rápida ---- */
